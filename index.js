@@ -65,7 +65,7 @@ app.get("/item/:id", (req,res) => {
               
     })
     
-})
+});
 
 app.get("/kategori", (req,res) => {
    
@@ -145,27 +145,6 @@ app.get("/pembeli/:id", (req,res) => {
     
 })
 
-app.post("/pembeli", (req,res) => {
-    const values = [
-    req.body.email,
-    req.body.username, 
-    req.body.password,
-    req.body.alamat,
-    req.body.foto_profil,
-    req.body.level
-    ] 
-
-    const sqlQuery = "INSERT INTO pembeli (`email`, `username`, `password`, `alamat`, `foto_profil`, `level`) VALUES (?)";
-
-    con.query(sqlQuery, [values], (err, rows) => {
-        try {
-            return res.json('udh keinput bang')
-        } catch (err) {
-            res.json()
-        }
-    })
-})
-
 app.get("/penjual", (req,res) => {
     
     const sqlQuery = `SELECT * FROM penjual`;
@@ -197,27 +176,87 @@ app.get("/penjual/:id", (req,res) => {
     
 })
 
-app.post("/penjual", (req,res) => {
+app.post("/pembeli", (req,res) => {
     const values = [
     req.body.email,
-    req.body.nama_toko,
-    req.body.logo_toko,
+    req.body.username, 
     req.body.password,
-    req.body.id_item,
     req.body.alamat,
-    req.body.whatsapp,
-    req.body.no_rek_penjual,
+    req.body.foto_profil,
+    req.body.no_rek_pembeli,
     req.body.level
     ] 
 
-    const sqlQuery = "INSERT INTO 'penjual' (`email`, `id_item`, `nama_toko`, `logo_toko`, `password`, `alamat`, `whatsapp`, `no_rek_penjual`, `level`) VALUES (?)";
+    const sqlQuery = "INSERT INTO pembeli (`level`, `email`, `username`, `password`, `alamat`, `foto_profil`, `no_rek_pembeli`) VALUES (?)";
 
     con.query(sqlQuery, [values], (err, rows) => {
         try {
-            return res.json('udh keinput bang')
+            return res.json()
         } catch (err) {
             res.json()
         }
     })
 })
 
+app.post("/penjual", (req,res) => {
+    const values = [
+    req.body.level,
+    req.body.email,
+    req.body.nama_toko,
+    req.body.logo_toko,
+    req.body.password,
+    req.body.alamat,
+    req.body.whatsapp,
+    req.body.no_rek_penjual
+    
+    ] 
+
+    const sqlQuery = "INSERT INTO penjual ( `level`, `email`, `nama_toko`, `logo_toko`, `password`, `alamat`, `whatsapp`, `no_rek_penjual`) VALUES (?)";
+
+    con.query(sqlQuery, [values], (err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }
+    })
+});
+
+app.post("/item", (req,res) => {
+    const id_penjual = req.body.id_penjual
+    const id_kategori = req.body.id_kategori
+    const nama_item = req.body.nama_item
+    const harga_item = req.body.harga_item
+    const foto_item = req.body.foto_item
+    const deksripsi_item = req.body.deksripsi_item
+    const stok_item = req.body.stok_item
+    const warna_item = req.body.warna_item
+    const ukuran_item = req.body.ukuran_item
+    const biaya_operasional =req.body.biaya_operasional
+    
+    const sqlQuery = `INSERT INTO item (nama_item, harga_item, foto_item, deskripsi_item, stok_item, warna_item, ukuran_item, biaya_operasional, id_penjual, id_kategori ) VALUES ('${nama_item}', '${harga_item}', '${foto_item}', '${deksripsi_item}', '${stok_item}', '${warna_item}', '${ukuran_item}', '${biaya_operasional}'  ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}))`;
+
+    con.query(sqlQuery, (err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }     
+    })
+});
+
+app.put("/pembeli", (req,res) => {
+    const id = req.body.id_pembeli
+    const value = req.body.value
+    const dataRecord = req.body.dataRecord
+
+    const sqlQuery = `UPDATE pembeli SET ${value} = '${dataRecord}' WHERE pembeli.id_pembeli = ${id}`;
+
+    con.query(sqlQuery, (err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }
+    })
+})
