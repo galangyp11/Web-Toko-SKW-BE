@@ -245,6 +245,66 @@ app.post("/item", (req,res) => {
     })
 });
 
+app.get("/keranjang", (req,res) => {
+    
+    const sqlQuery = `SELECT * FROM keranjang JOIN item ON keranjang.id_item = item.id_item `;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+});
+
+app.post("/keranjang", (req,res)=>{
+    const id = req.body.id
+    const jumlah = req.body.jumlah
+
+    const sqlQuery = `INSERT INTO keranjang (id_item, jumlah) VALUES ((SELECT id_item FROM item WHERE id_item = ${id}), '${jumlah}')`;
+
+    con.query(sqlQuery, (err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }     
+    })
+});
+
+app.get("/keranjang/:id", (req,res) => {
+    const id = req.params.id;
+    
+    const sqlQuery = `SELECT * FROM keranjang where id_keranjang = ${id}`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows[0])
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+})
+
+app.delete("/keranjang/:id", (req,res)=>{
+    const id = req.params.id;
+
+    const sqlQuery = `DELETE FROM keranjang WHERE id_keranjang = ${id}`;
+
+    con.query(sqlQuery, (err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }     
+    })
+})
+
 app.put("/pembeli", (req,res) => {
     const id = req.body.id_pembeli
     const value = req.body.value
