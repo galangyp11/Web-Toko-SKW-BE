@@ -177,19 +177,27 @@ app.get("/penjual/:id", (req,res) => {
 })
 
 app.post("/pembeli", (req,res) => {
-    const values = [
-    req.body.email,
-    req.body.username, 
-    req.body.password,
-    req.body.alamat,
-    req.body.foto_profil,
-    req.body.no_rek_pembeli,
-    req.body.level
-    ] 
+    // const values = [
+    // req.body.email,
+    // req.body.username, 
+    // req.body.password,
+    // req.body.alamat,
+    // req.body.foto_profil,
+    // req.body.no_rek_pembeli,
+    // req.body.level
+    // ] 
 
-    const sqlQuery = "INSERT INTO pembeli (`level`, `email`, `username`, `password`, `alamat`, `foto_profil`, `no_rek_pembeli`) VALUES (?)";
+    const email = req.body.email
+    const username = req.body.username 
+    const password = req.body.password
+    const alamat = req.body.alamat
+    const foto_profil = req.body.foto_profil
+    const no_rek_pembeli = req.body.no_rek_pembeli
+    const level = req.body.level
 
-    con.query(sqlQuery, [values], (err, rows) => {
+    const sqlQuery = `INSERT INTO pembeli (level, email, username, password, alamat, foto_profil, no_rek_pembeli) VALUES ('${level}', '${email}', '${username}', '${password}', '${alamat}', '${foto_profil}', '${no_rek_pembeli}')`;
+
+    con.query(sqlQuery, (err, rows) => {
         try {
             return res.json()
         } catch (err) {
@@ -199,21 +207,18 @@ app.post("/pembeli", (req,res) => {
 })
 
 app.post("/penjual", (req,res) => {
-    const values = [
-    req.body.level,
-    req.body.email,
-    req.body.nama_toko,
-    req.body.logo_toko,
-    req.body.password,
-    req.body.alamat,
-    req.body.whatsapp,
-    req.body.no_rek_penjual
-    
-    ] 
+    const level = req.body.level
+    const email = req.body.email
+    const nama_toko = req.body.nama_toko
+    const logo_toko = req.body.logo_toko
+    const password = req.body.password
+    const alamat = req.body.alamat
+    const whatsapp = req.body.whatsapp
+    const no_rek_penjual = req.body.no_rek_penjual
 
-    const sqlQuery = "INSERT INTO penjual ( `level`, `email`, `nama_toko`, `logo_toko`, `password`, `alamat`, `whatsapp`, `no_rek_penjual`) VALUES (?)";
+    const sqlQuery = `INSERT INTO penjual ( level, email, nama_toko, logo_toko, password, alamat, whatsapp, no_rek_penjual) VALUES ('${level}', '${email}', '${nama_toko}', '${logo_toko}', '${password}', '${alamat}', '${whatsapp}', '${no_rek_penjual}')`;
 
-    con.query(sqlQuery, [values], (err, rows) => {
+    con.query(sqlQuery, (err, rows) => {
         try {
             return res.json()
         } catch (err) {
@@ -246,8 +251,25 @@ app.post("/item", (req,res) => {
 });
 
 app.get("/keranjang", (req,res) => {
+    const id_pembeli = req.body.id_pembeli
     
-    const sqlQuery = `SELECT * FROM keranjang JOIN item ON keranjang.id_item = item.id_item `;
+    const sqlQuery = `SELECT * FROM keranjang `;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+});
+
+app.get("/keranjang/:id", (req,res) => {
+    const id = req.params.id;
+    
+    const sqlQuery = `SELECT * FROM keranjang JOIN item ON keranjang.id_item = item.id_item where id_pembeli = ${id}`;
     con.query(sqlQuery, (err, rows) => {
 
         try {
@@ -261,10 +283,11 @@ app.get("/keranjang", (req,res) => {
 });
 
 app.post("/keranjang", (req,res)=>{
-    const id = req.body.id
+    const id_pembeli = req.body.id_pembeli
+    const id_item = req.body.id_item
     const jumlah = req.body.jumlah
 
-    const sqlQuery = `INSERT INTO keranjang (id_item, jumlah) VALUES ((SELECT id_item FROM item WHERE id_item = ${id}), '${jumlah}')`;
+    const sqlQuery = `INSERT INTO keranjang (id_pembeli, id_item, jumlah) VALUES ((SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${jumlah}')`;
 
     con.query(sqlQuery, (err, rows) => {
         try {
@@ -278,7 +301,23 @@ app.post("/keranjang", (req,res)=>{
 app.get("/keranjang/:id", (req,res) => {
     const id = req.params.id;
     
-    const sqlQuery = `SELECT * FROM keranjang where id_keranjang = ${id}`;
+    const sqlQuery = `SELECT * FROM keranjang WHERE id_pembeli = ${id}`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows[0])
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+})
+
+app.get("/keranjang/delete/:id", (req,res) => {
+    const id = req.params.id;
+    
+    const sqlQuery = `SELECT * FROM keranjang WHERE id_keranjang = ${id}`;
     con.query(sqlQuery, (err, rows) => {
 
         try {
@@ -295,7 +334,6 @@ app.delete("/keranjang/:id", (req,res)=>{
     const id = req.params.id;
 
     const sqlQuery = `DELETE FROM keranjang WHERE id_keranjang = ${id}`;
-
     con.query(sqlQuery, (err, rows) => {
         try {
             return res.json()
@@ -319,4 +357,56 @@ app.put("/pembeli", (req,res) => {
             res.json()
         }
     })
+});
+
+app.get("/admin", (req,res) => {
+    
+    const sqlQuery = `SELECT * FROM admin`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows[0])
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
 })
+
+
+app.get("/checkout", (req,res) => {
+    
+    const sqlQuery = `SELECT * FROM checkout JOIN item ON checkout.id_item = item.id_item`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+})
+
+app.post("/checkout", (req,res)=>{
+    // const id_item = req.body.id_item
+    // const id_keranjang  = req.body.id_keranjang
+
+    const values = [
+        req.body.id_item,
+        req.body.id_keranjang
+    ]
+
+
+    const sqlQuery = `INSERT INTO checkout (id_item, id_keranjang) VALUES (?)`;
+
+    con.query(sqlQuery, [values],(err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }     
+    })
+});
