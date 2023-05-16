@@ -365,7 +365,7 @@ app.get("/admin", (req,res) => {
     con.query(sqlQuery, (err, rows) => {
 
         try {
-            res.json(rows[0])
+            res.json(rows)
         } catch (error) {
             res.json({ message: error.message})            
         }
