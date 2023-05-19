@@ -177,16 +177,6 @@ app.get("/penjual/:id", (req,res) => {
 })
 
 app.post("/pembeli", (req,res) => {
-    // const values = [
-    // req.body.email,
-    // req.body.username, 
-    // req.body.password,
-    // req.body.alamat,
-    // req.body.foto_profil,
-    // req.body.no_rek_pembeli,
-    // req.body.level
-    // ] 
-
     const email = req.body.email
     const username = req.body.username 
     const password = req.body.password
@@ -376,8 +366,9 @@ app.get("/admin", (req,res) => {
 
 
 app.get("/checkout", (req,res) => {
-    
-    const sqlQuery = `SELECT * FROM checkout JOIN item ON checkout.id_item = item.id_item`;
+    const id_pembeli = req.body.id_pembeli
+
+    const sqlQuery = `SELECT * FROM checkout `;
     con.query(sqlQuery, (err, rows) => {
 
         try {
@@ -391,18 +382,27 @@ app.get("/checkout", (req,res) => {
 })
 
 app.post("/checkout", (req,res)=>{
-    // const id_item = req.body.id_item
-    // const id_keranjang  = req.body.id_keranjang
-
     const values = [
+        req.body.id_pembeli,
         req.body.id_item,
         req.body.id_keranjang
     ]
 
+    // const values = req.body.map((value) => [
+    //     value.id_pembeli,
+    //     value.id_item,
+    //     value.id_keranjang
+    // ])
 
-    const sqlQuery = `INSERT INTO checkout (id_item, id_keranjang) VALUES (?)`;
+    // const id_item = req.body.id_item
+    // const id_keranjang = req.body.id_keranjang
+    // const id_pembeli = req.body.id_pembeli
 
-    con.query(sqlQuery, [values],(err, rows) => {
+    const sqlQuery = `INSERT INTO checkout (id_pembeli, id_item, id_keranjang) VALUES (?)`;
+
+    // const sqlQuery = `INSERT INTO checkout (id_item, id_keranjang, id_pembeli) VALUES ((SELECT id_item FROM item WHERE id_item = ${id_item}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}),)`;
+
+    con.query(sqlQuery, [values], (err, rows) => {
         try {
             return res.json()
         } catch (err) {
@@ -410,3 +410,61 @@ app.post("/checkout", (req,res)=>{
         }     
     })
 });
+
+app.delete("/checkout", (req,res)=>{
+
+    const sqlQuery = `DELETE FROM checkout `;
+    con.query(sqlQuery, (err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }     
+    })
+});
+
+app.get("/metodepembayaran/:id", (req,res) => {
+    const id = req.params.id
+
+    const sqlQuery = `SELECT * FROM metode_pembayaran WHERE id_mp = ${id}`
+    con.query(sqlQuery, (err,rows)=>{
+        try {
+            res.json(rows[0])
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+    })
+})
+
+app.get("/konfirmasi", (req,res) => {
+    
+    const sqlQuery = `SELECT * FROM konfirmasi `;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+});
+
+app.post("/konfirmasi", (req,res)=>{
+    const id_mp = req.body.id_mp
+    const id_item = req.body.id_item
+    const id_pembeli = req.body.id_pembeli
+    const waktu_pesan = req.body.waktu_pesan
+
+    const sqlQuery = `INSERT INTO konfirmasi ( id_mp, id_item, id_pembeli, waktu_pesan ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_item FROM item WHERE id_item = ${id_item}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), '${waktu_pesan}')`;
+
+    con.query(sqlQuery, (err, rows) => {
+        try {
+            return res.json()
+        } catch (err) {
+            res.json()
+        }     
+    })
+});
+
