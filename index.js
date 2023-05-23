@@ -26,7 +26,7 @@ app.listen(process.env.PORT || port, () => {
 let con = mysql.createConnection({
   host: "Localhost",
   user: "root",
-  password: "",
+  password: "raka",
   database: "skw",
 });
 
@@ -58,20 +58,29 @@ app.get("/", function (req, res, next) {
 
 app.get("/item", (req, res) => {
   console.log("req", req);
-  const sqlQuery =
-    "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item";
+  let sqlQuery =
+    "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori LEFT JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item";
+
+  if (req.query.search) {
+    sqlQuery += ` WHERE item.nama_item LIKE '%${req.query.search}%'`;
+  }
+
   con.query(sqlQuery, (err, rows) => {
     try {
-      console.log("rows", rows);
       const data = rows?.reduce((results, i) => {
-        const idx = results.findIndex((item) => item.id_item === i.id_item);
+        if (i.gambar) {
+          const idx = results.findIndex((item) => item.id_item === i.id_item);
 
-        if (idx < 0) {
-          i.gambar = [i.gambar];
-          results.push(i);
+          if (idx < 0) {
+            i.gambar = [i.gambar];
+            results.push(i);
+            return results;
+          }
+          results[idx].gambar.push(i.gambar);
+
           return results;
         }
-        results[idx].gambar.push(i.gambar);
+        results.push(i);
         return results;
       }, []);
       res.json(data ?? []);

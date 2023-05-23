@@ -375,6 +375,12 @@ ALTER TABLE `transaksi`
   ADD CONSTRAINT `transaksi_ibfk_2` FOREIGN KEY (`id_checkout`) REFERENCES `checkout` (`id_checkout`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `transaksi_ibfk_3` FOREIGN KEY (`id_keranjang`) REFERENCES `checkout` (`id_keranjang`) ON DELETE CASCADE ON UPDATE CASCADE;
 
+--
+-- Constraints for table `item`
+--
+ALTER TABLE `item`
+  ADD `id_penjual` int(50) DEFAULT NULL,
+  CONSTRAINT FK_id_penjual FOREIGN KEY (`id_penjual`) REFERENCES penjual(id_penjual)
 
   -- --------------------------------------------------------
 
