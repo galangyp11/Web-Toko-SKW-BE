@@ -26,7 +26,7 @@ app.listen(process.env.PORT || port, () => {
 let con = mysql.createConnection({
   host: "Localhost",
   user: "root",
-  password: "raka",
+  password: "",
   database: "skw",
 });
 
