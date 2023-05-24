@@ -53,14 +53,14 @@ app.get('/', function(req, res, next){
 })
 
 app.get("/item", (req,res) => {
-    console.log('req', req)
+    // console.log('req', req)
     const sqlQuery = "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item";
     con.query(sqlQuery, (err, rows) => {
-        console.log('rows', rows)
+        // console.log('rows', rows)
         try {
             const data = rows.reduce((results, i) => {
-                console.log('results', results)
-                console.log('i', i)
+                // console.log('results', results)
+                // console.log('i', i)
                 const idx = results.findIndex(item => item.id_item === i.id_item)
 
                 if (idx < 0) {
@@ -73,7 +73,7 @@ app.get("/item", (req,res) => {
             }, [])
             res.json(data)
         } catch (error) {
-            console.log(error)
+            // console.log(error)
             res.json({ message: error.message})
         }
               
@@ -84,11 +84,27 @@ app.get("/item", (req,res) => {
 app.get("/item/:id", (req,res) => {
     const id = req.params.id;
     
-    const sqlQuery = `SELECT * FROM item where id_item = ${id}`;
+    const sqlQuery = `SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual where item.id_item = ${id}`;
     con.query(sqlQuery, (err, rows) => {
 
         try {
             res.json(rows[0])
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+});
+
+app.get("/item-penjual/:id", (req,res) => {
+    const id = req.params.id;
+    
+    const sqlQuery = `SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual where item.id_penjual = ${id}`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
         } catch (error) {
             res.json({ message: error.message})            
         }
@@ -248,7 +264,7 @@ app.post("/penjual", (req,res) => {
 });
 
 app.post("/item", upload.array('foto_item', 10), (req,res) => {
-    console.log('reqbody', req)
+    // console.log('reqbody', req)
     const id_penjual = req.body.id_penjual
     const id_kategori = req.body.id_kategori
     const nama_item = req.body.nama_item
@@ -272,7 +288,7 @@ app.post("/item", upload.array('foto_item', 10), (req,res) => {
                         `./uploads/${item.filename}`,
                         `./uploads/${newFileName}`,
                         function () {
-                        console.log("file renamed and uploaded");
+                        // console.log("file renamed and uploaded");
                         }
                     );
                     const imagePath = `${__dirname}/uploads/${newFileName}`
@@ -300,7 +316,7 @@ app.post("/item", upload.array('foto_item', 10), (req,res) => {
 app.get("/keranjang/:id", (req,res) => {
     const id = req.params.id;
     
-    const sqlQuery = `SELECT * FROM keranjang JOIN item ON keranjang.id_item = item.id_item WHERE id_pembeli = ${id}`;
+    const sqlQuery = `SELECT * FROM keranjang JOIN item ON keranjang.id_item = item.id_item JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli WHERE keranjang.id_pembeli = ${id}`;
     con.query(sqlQuery, (err, rows) => {
 
         try {
@@ -478,10 +494,56 @@ app.get("/transaksi", (req,res) => {
     
 });
 
+app.get("/transaksi/pembeli", (req,res) => {
+    
+    const sqlQuery = `SELECT * FROM transaksi JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+});
+
 app.get("/transaksi/pembeli/:id", (req,res) => {
     const id = req.params.id
     
-    const sqlQuery = `SELECT * FROM transaksi JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp WHERE transaksi.id_pembeli = ${id}`;
+    const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp WHERE transaksi.id_pembeli = ${id}`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+});
+
+app.get("/transaksi/penjual/:id", (req,res) => {
+    const id = req.params.id
+    
+    const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_penjual = ${id} AND transaksi.status_transaksi = 'Pesanan sedang di proses'`;
+    con.query(sqlQuery, (err, rows) => {
+
+        try {
+            res.json(rows)
+        } catch (error) {
+            res.json({ message: error.message})            
+        }
+              
+    })
+    
+});
+
+app.get("/transaksi/riwayat", (req,res) => {
+    
+    const sqlQuery = `SELECT * FROM transaksi JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN item ON transaksi.id_item = item.id_item`;
     con.query(sqlQuery, (err, rows) => {
 
         try {
@@ -498,11 +560,12 @@ app.post("/transaksi", (req,res)=>{
     const id_mp = req.body.id_mp
     const id_item = req.body.id_item
     const id_keranjang = req.body.id_keranjang
+    const id_penjual = req.body.id_penjual
     const id_pembeli = req.body.id_pembeli
     const waktu_pesan = req.body.waktu_pesan
     const status_transaksi = req.body.status_transaksi
 
-    const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli,  id_item, waktu_pesan, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${status_transaksi}')`;
+    const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, waktu_pesan, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${status_transaksi}')`;
 
     con.query(sqlQuery, (err, rows) => {
         try {
