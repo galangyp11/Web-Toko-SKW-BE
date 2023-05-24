@@ -56,15 +56,6 @@ app.get("/", function (req, res, next) {
   res.send("test");
 });
 
-app.get("/item", (req, res) => {
-  console.log("req", req);
-  let sqlQuery =
-    "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori LEFT JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item";
-
-  if (req.query.search) {
-    sqlQuery += ` WHERE item.nama_item LIKE '%${req.query.search}%'`;
-  }
-
 app.get("/item", (req,res) => {
     // console.log('req', req)
     const sqlQuery = "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item";
@@ -549,65 +540,65 @@ app.get("/transaksi/riwayat", (req,res) => {
     
 });
 
-app.post("/transaksi", (req,res)=>{
-    const id_mp = req.body.id_mp
-    const id_item = req.body.id_item
-    const id_keranjang = req.body.id_keranjang
-    const id_penjual = req.body.id_penjual
-    const id_pembeli = req.body.id_pembeli
-    const waktu_pesan = req.body.waktu_pesan
-    const status_transaksi = req.body.status_transaksi
+// app.post("/transaksi", (req,res)=>{
+//     const id_mp = req.body.id_mp
+//     const id_item = req.body.id_item
+//     const id_keranjang = req.body.id_keranjang
+//     const id_penjual = req.body.id_penjual
+//     const id_pembeli = req.body.id_pembeli
+//     const waktu_pesan = req.body.waktu_pesan
+//     const status_transaksi = req.body.status_transaksi
 
-    const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, waktu_pesan, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${status_transaksi}')`;
+//     const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, waktu_pesan, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${status_transaksi}')`;
 
-  con.query(sqlQuery, (err, rows) => {
-    try {
-      return res.json();
-    } catch (err) {
-      res.json();
-    }
-  });
-});
+//   con.query(sqlQuery, (err, rows) => {
+//     try {
+//       return res.json();
+//     } catch (err) {
+//       res.json();
+//     }
+//   });
+// });
 
-app.put("/transaksi/:id", (req, res) => {
-  const id = req.params.id;
-  const status_transaksi = req.body.status_transaksi;
+// app.put("/transaksi/:id", (req, res) => {
+//   const id = req.params.id;
+//   const status_transaksi = req.body.status_transaksi;
 
-  const sqlQuery = `UPDATE transaksi SET status_transaksi = '${status_transaksi}' WHERE transaksi.id_transaksi = ${id}`;
+//   const sqlQuery = `UPDATE transaksi SET status_transaksi = '${status_transaksi}' WHERE transaksi.id_transaksi = ${id}`;
 
-  con.query(sqlQuery, (err, rows) => {
-    try {
-      return res.json();
-    } catch (err) {
-      res.json();
-    }
-  });
-});
+//   con.query(sqlQuery, (err, rows) => {
+//     try {
+//       return res.json();
+//     } catch (err) {
+//       res.json();
+//     }
+//   });
+// });
 
-app.get("/konfirmasi", (req, res) => {
-  const sqlQuery = `SELECT * FROM konfirmasi JOIN pembeli ON konfirmasi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON konfirmasi.id_mp = metode_pembayaran.id_mp`;
-  con.query(sqlQuery, (err, rows) => {
-    try {
-      res.json(rows ?? []);
-    } catch (error) {
-      res.json({ message: error.message });
-    }
-  });
-});
+// app.get("/konfirmasi", (req, res) => {
+//   const sqlQuery = `SELECT * FROM konfirmasi JOIN pembeli ON konfirmasi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON konfirmasi.id_mp = metode_pembayaran.id_mp`;
+//   con.query(sqlQuery, (err, rows) => {
+//     try {
+//       res.json(rows);
+//     } catch (error) {
+//       res.json({ message: error.message });
+//     }
+//   });
+// });
 
-app.post("/konfirmasi", (req, res) => {
-  const id_mp = req.body.id_mp;
-  const id_item = req.body.id_item;
-  const id_pembeli = req.body.id_pembeli;
-  const waktu_pesan = req.body.waktu_pesan;
+// app.post("/konfirmasi", (req, res) => {
+//   const id_mp = req.body.id_mp;
+//   const id_item = req.body.id_item;
+//   const id_pembeli = req.body.id_pembeli;
+//   const waktu_pesan = req.body.waktu_pesan;
 
-  const sqlQuery = `INSERT INTO konfirmasi ( id_mp, id_item, id_pembeli, waktu_pesan ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_item FROM item WHERE id_item = ${id_item}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), '${waktu_pesan}')`;
+//   const sqlQuery = `INSERT INTO konfirmasi ( id_mp, id_item, id_pembeli, waktu_pesan ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_item FROM item WHERE id_item = ${id_item}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), '${waktu_pesan}')`;
 
-  con.query(sqlQuery, (err, rows) => {
-    try {
-      return res.json();
-    } catch (err) {
-      res.json();
-    }
-  });
-});
+//   con.query(sqlQuery, (err, rows) => {
+//     try {
+//       return res.json();
+//     } catch (err) {
+//       res.json();
+//     }
+//   });
+// });
