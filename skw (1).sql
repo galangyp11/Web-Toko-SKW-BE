@@ -374,6 +374,28 @@ ALTER TABLE `transaksi`
   ADD CONSTRAINT `transaksi_ibfk_1` FOREIGN KEY (`id_item`) REFERENCES `checkout` (`id_item`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `transaksi_ibfk_2` FOREIGN KEY (`id_checkout`) REFERENCES `checkout` (`id_checkout`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `transaksi_ibfk_3` FOREIGN KEY (`id_keranjang`) REFERENCES `checkout` (`id_keranjang`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `item`
+--
+ALTER TABLE `item`
+  ADD `id_penjual` int(50) DEFAULT NULL,
+  CONSTRAINT FK_id_penjual FOREIGN KEY (`id_penjual`) REFERENCES penjual(id_penjual)
+
+  -- --------------------------------------------------------
+
+--
+-- Table structure for table `item_gambar`
+--
+
+CREATE TABLE `item_gambar` (
+  `id_gambar` int(5) NOT NULL PRIMARY KEY,
+  `id_item` int(5) DEFAULT NULL,
+  `gambar` varchar(100) NOT NULL,
+  CONSTRAINT FK_id_item FOREIGN KEY (`id_item`) REFERENCES item(id_item)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
