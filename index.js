@@ -363,6 +363,8 @@ app.get("/keranjang/:id_pembeli/:id", (req, res) => {
   });
 });
 
+
+
 app.delete("/keranjang/:id", (req, res) => {
   const id_pembeli = req.body.id_pembeli;
   const id = req.params.id;
@@ -383,6 +385,21 @@ app.put("/pembeli", (req, res) => {
   const dataRecord = req.body.dataRecord;
 
   const sqlQuery = `UPDATE pembeli SET ${value} = '${dataRecord}' WHERE pembeli.id_pembeli = ${id}`;
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
+app.put("/keranjang", (req, res) => {
+  const id = req.body.id_keranjang;
+  const jumlah = req.body.jumlah;
+
+  const sqlQuery = `UPDATE keranjang SET jumlah = '${jumlah}' WHERE keranjang.id_keranjang = ${id}`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -540,40 +557,40 @@ app.get("/transaksi/riwayat", (req,res) => {
     
 });
 
-// app.post("/transaksi", (req,res)=>{
-//     const id_mp = req.body.id_mp
-//     const id_item = req.body.id_item
-//     const id_keranjang = req.body.id_keranjang
-//     const id_penjual = req.body.id_penjual
-//     const id_pembeli = req.body.id_pembeli
-//     const waktu_pesan = req.body.waktu_pesan
-//     const status_transaksi = req.body.status_transaksi
+app.post("/transaksi", (req,res)=>{
+    const id_mp = req.body.id_mp
+    const id_item = req.body.id_item
+    const id_keranjang = req.body.id_keranjang
+    const id_penjual = req.body.id_penjual
+    const id_pembeli = req.body.id_pembeli
+    const waktu_pesan = req.body.waktu_pesan
+    const status_transaksi = req.body.status_transaksi
 
-//     const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, waktu_pesan, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${status_transaksi}')`;
+    const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, waktu_pesan, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${status_transaksi}')`;
 
-//   con.query(sqlQuery, (err, rows) => {
-//     try {
-//       return res.json();
-//     } catch (err) {
-//       res.json();
-//     }
-//   });
-// });
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
 
-// app.put("/transaksi/:id", (req, res) => {
-//   const id = req.params.id;
-//   const status_transaksi = req.body.status_transaksi;
+app.put("/transaksi/:id", (req, res) => {
+  const id = req.params.id;
+  const status_transaksi = req.body.status_transaksi;
 
-//   const sqlQuery = `UPDATE transaksi SET status_transaksi = '${status_transaksi}' WHERE transaksi.id_transaksi = ${id}`;
+  const sqlQuery = `UPDATE transaksi SET status_transaksi = '${status_transaksi}' WHERE transaksi.id_transaksi = ${id}`;
 
-//   con.query(sqlQuery, (err, rows) => {
-//     try {
-//       return res.json();
-//     } catch (err) {
-//       res.json();
-//     }
-//   });
-// });
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
 
 // app.get("/konfirmasi", (req, res) => {
 //   const sqlQuery = `SELECT * FROM konfirmasi JOIN pembeli ON konfirmasi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON konfirmasi.id_mp = metode_pembayaran.id_mp`;
@@ -601,4 +618,4 @@ app.get("/transaksi/riwayat", (req,res) => {
 //       res.json();
 //     }
 //   });
-// });
+// }); 
