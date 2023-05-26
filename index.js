@@ -398,8 +398,9 @@ app.put("/pembeli", (req, res) => {
 app.put("/keranjang", (req, res) => {
   const id = req.body.id_keranjang;
   const jumlah = req.body.jumlah;
+  const total_harga = req.body.total_harga;
 
-  const sqlQuery = `UPDATE keranjang SET jumlah = '${jumlah}' WHERE keranjang.id_keranjang = ${id}`;
+  const sqlQuery = `UPDATE keranjang SET jumlah = '${jumlah}', total_harga = '${total_harga}' WHERE keranjang.id_keranjang = ${id}`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -435,7 +436,10 @@ app.get("/checkout", (req, res) => {
 });
 
 app.post("/checkout", (req, res) => {
-  const values = [req.body.id_pembeli, req.body.id_item, req.body.id_keranjang];
+  const values = [
+    req.body.id_pembeli, 
+    req.body.id_item, 
+    req.body.id_keranjang];
 
   // const values = req.body.map((value) => [
   //     value.id_pembeli,
@@ -564,9 +568,10 @@ app.post("/transaksi", (req,res)=>{
     const id_penjual = req.body.id_penjual
     const id_pembeli = req.body.id_pembeli
     const waktu_pesan = req.body.waktu_pesan
+    const total_harga_transaksi = req.body.total_harga_transaksi
     const status_transaksi = req.body.status_transaksi
 
-    const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, waktu_pesan, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${status_transaksi}')`;
+    const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, waktu_pesan, total_harga_transaksi, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
