@@ -101,6 +101,19 @@ app.get("/item/:id", (req,res) => {
     
 });
 
+app.delete("/item/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `DELETE FROM item WHERE id_item = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
 app.get("/item-penjual/:id", (req,res) => {
     const id = req.params.id;
     
@@ -184,16 +197,26 @@ app.get("/pembeli/:id", (req,res) => {
     
     const sqlQuery = `SELECT * FROM pembeli where id_pembeli = ${id}`;
     con.query(sqlQuery, (err, rows) => {
-
         try {
             res.json(rows[0])
         } catch (error) {
             res.json({ message: error.message})            
-        }
-              
+        }     
     })
-    
-})
+});
+
+app.delete("/pembeli/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `DELETE FROM pembeli WHERE id_pembeli = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
 
 app.get("/penjual", (req,res) => {
     
@@ -224,7 +247,20 @@ app.get("/penjual/:id", (req,res) => {
               
     })
     
-})
+});
+
+app.delete("/penjual/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `DELETE FROM penjual WHERE id_penjual = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
 
 app.post("/pembeli", (req,res) => {
     const email = req.body.email
@@ -257,6 +293,27 @@ app.post("/penjual", (req, res) => {
   const no_rek_penjual = req.body.no_rek_penjual;
 
   const sqlQuery = `INSERT INTO penjual ( level, email, nama_toko, logo_toko, password, alamat, whatsapp, no_rek_penjual) VALUES ('${level}', '${email}', '${nama_toko}', '${logo_toko}', '${password}', '${alamat}', '${whatsapp}', '${no_rek_penjual}')`;
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
+app.put("/penjual", (req, res) => {
+  const id = req.body.id_penjual;
+  const email = req.body.email;
+  const nama_toko = req.body.nama_toko;
+  const logo_toko = req.body.logo_toko;
+  const password = req.body.password;
+  const alamat = req.body.alamat;
+  const whatsapp = req.body.whatsapp;
+  const no_rek_penjual = req.body.no_rek_penjual;
+
+  const sqlQuery = `UPDATE penjual SET email = '${email}', nama_toko = '${nama_toko}', logo_toko = '${logo_toko}', password = '${password}', alamat = '${alamat}', whatsapp = '${whatsapp}', no_rek_penjual = '${no_rek_penjual}' WHERE penjual.id_penjual = ${id}`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
