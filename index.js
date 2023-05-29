@@ -334,9 +334,10 @@ app.post("/item", upload.array('foto_item', 10), (req,res) => {
     const stok_item = req.body.stok_item
     const warna_item = req.body.warna_item
     const ukuran_item = req.body.ukuran_item
-    const biaya_operasional =req.body.biaya_operasional
+    const biaya_operasional = req.body.biaya_operasional
+    const tgl_input  = req.body.tgl_input
     
-    const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, warna_item, ukuran_item, biaya_operasional, id_penjual, id_kategori ) VALUES ('${nama_item}', '${harga_item}', '${deksripsi_item}', '${stok_item}', '${warna_item}', '${ukuran_item}', '${biaya_operasional}'  ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}))`;
+    const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, warna_item, ukuran_item, biaya_operasional, id_penjual, id_kategori, tgl_input ) VALUES ('${nama_item}', '${harga_item}', '${deksripsi_item}', '${stok_item}', '${warna_item}', '${ukuran_item}', '${biaya_operasional}'  ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}), '${tgl_input}')`;
 
     con.query(sqlQuery, (err, rows) => {
         try {
@@ -372,6 +373,60 @@ app.post("/item", upload.array('foto_item', 10), (req,res) => {
     })
 
   return res.json();
+});
+
+app.put("/item", upload.array('foto_item', 10), (req,res) => {
+  console.log('reqbody', req)
+  const id_item = req.body.id_item
+  const id_penjual = req.body.id_penjual
+  const id_kategori = req.body.id_kategori
+  const nama_item = req.body.nama_item
+  const harga_item = req.body.harga_item
+  const deskripsi_item = req.body.deskripsi_item
+  const stok_item = req.body.stok_item
+  const warna_item = req.body.warna_item
+  const ukuran_item = req.body.ukuran_item
+  const biaya_operasional = req.body.biaya_operasional
+  const tgl_input  = req.body.tgl_input
+  
+  const sqlQuery = `UPDATE item SET nama_item = '${nama_item}', harga_item = '${harga_item}', deskripsi_item = '${deskripsi_item}', stok_item = '${stok_item}', warna_item = '${warna_item}', ukuran_item = '${ukuran_item}', biaya_operasional = '${biaya_operasional}' id_penjual = '${id_penjual}', id_kategori = '${id_kategori}', tgl_input = '${tgl_input}' WHERE item.id_item = ${id_item}`;
+
+  // UPDATE penjual SET email = '${email}', nama_toko = '${nama_toko}', logo_toko = '${logo_toko}', password = '${password}', alamat = '${alamat}', whatsapp = '${whatsapp}', no_rek_penjual = '${no_rek_penjual}' WHERE penjual.id_penjual = ${id}
+
+  con.query(sqlQuery, (err, rows) => {
+      try {
+          if (req.files.length) {
+              req.files.forEach(item => {
+                  const fileType = item.mimetype.split("/")[1];
+                  let newFileName = item.filename + "." + fileType;
+      
+                  fs.rename(
+                      `./uploads/${item.filename}`,
+                      `./uploads/${newFileName}`,
+                      function () {
+                      console.log("file renamed and uploaded");
+                      }
+                  );
+                  const imagePath = `${__dirname}/uploads/${newFileName}`
+      
+                  const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${rows.insertId}, '${imagePath}')`;
+                  
+                  con.query(addImageQuery, (err, rows) => {
+                      try {
+                          return res.json()
+                      } catch (err) {
+                          return res.json()
+                      }     
+                  })
+              })
+          }   
+          return res.json()
+      } catch (err) {
+          return res.json()
+      }     
+  })
+
+return res.json();
 });
 
 app.get("/keranjang/:id", (req,res) => {
@@ -438,10 +493,12 @@ app.delete("/keranjang/:id", (req, res) => {
 
 app.put("/pembeli", (req, res) => {
   const id = req.body.id_pembeli;
-  const value = req.body.value;
-  const dataRecord = req.body.dataRecord;
+  const username = req.body.username;
+  const email = req.body.email;
+  const password = req.body.password;
+  const alamat = req.body.alamat;
 
-  const sqlQuery = `UPDATE pembeli SET ${value} = '${dataRecord}' WHERE pembeli.id_pembeli = ${id}`;
+  const sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
