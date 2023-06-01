@@ -58,7 +58,7 @@ app.get("/", function (req, res, next) {
 
 app.get("/item", (req,res) => {
     // console.log('req', req)
-    const sqlQuery = "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item";
+    const sqlQuery = "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item ";
     con.query(sqlQuery, (err, rows) => {
         // console.log('rows', rows)
         try {
@@ -88,7 +88,7 @@ app.get("/item", (req,res) => {
 app.get("/item/:id", (req,res) => {
     const id = req.params.id;
     
-    const sqlQuery = `SELECT * FROM item where id_item = ${id}`;
+    const sqlQuery = `SELECT * FROM item JOIN penjual ON item.id_penjual = penjual.id_penjual JOIN item_ukuran ON item.id_item = item_ukuran.id_item where item.id_item = ${id}`;
     con.query(sqlQuery, (err, rows) => {
 
         try {
@@ -288,11 +288,11 @@ app.post("/penjual", (req, res) => {
   const nama_toko = req.body.nama_toko;
   const logo_toko = req.body.logo_toko;
   const password = req.body.password;
-  const alamat = req.body.alamat;
+  const alamat_toko = req.body.alamat;
   const whatsapp = req.body.whatsapp;
   const no_rek_penjual = req.body.no_rek_penjual;
 
-  const sqlQuery = `INSERT INTO penjual ( level, email, nama_toko, logo_toko, password, alamat, whatsapp, no_rek_penjual) VALUES ('${level}', '${email}', '${nama_toko}', '${logo_toko}', '${password}', '${alamat}', '${whatsapp}', '${no_rek_penjual}')`;
+  const sqlQuery = `INSERT INTO penjual ( level, email, nama_toko, logo_toko, password, alamat_toko, whatsapp, no_rek_penjual) VALUES ('${level}', '${email}', '${nama_toko}', '${logo_toko}', '${password}', '${alamat_toko}', '${whatsapp}', '${no_rek_penjual}')`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -309,11 +309,11 @@ app.put("/penjual", (req, res) => {
   const nama_toko = req.body.nama_toko;
   const logo_toko = req.body.logo_toko;
   const password = req.body.password;
-  const alamat = req.body.alamat;
+  const alamat_toko = req.body.alamat;
   const whatsapp = req.body.whatsapp;
   const no_rek_penjual = req.body.no_rek_penjual;
 
-  const sqlQuery = `UPDATE penjual SET email = '${email}', nama_toko = '${nama_toko}', logo_toko = '${logo_toko}', password = '${password}', alamat = '${alamat}', whatsapp = '${whatsapp}', no_rek_penjual = '${no_rek_penjual}' WHERE penjual.id_penjual = ${id}`;
+  const sqlQuery = `UPDATE penjual SET email = '${email}', nama_toko = '${nama_toko}', logo_toko = '${logo_toko}', password = '${password}', alamat_toko = '${alamat_toko}', whatsapp = '${whatsapp}', no_rek_penjual = '${no_rek_penjual}' WHERE penjual.id_penjual = ${id}`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -325,7 +325,7 @@ app.put("/penjual", (req, res) => {
 });
 
 app.post("/item", upload.array('foto_item', 10), (req,res) => {
-    console.log('reqbody', req)
+    // console.log('reqbody', req)
     const id_penjual = req.body.id_penjual
     const id_kategori = req.body.id_kategori
     const nama_item = req.body.nama_item
@@ -337,9 +337,23 @@ app.post("/item", upload.array('foto_item', 10), (req,res) => {
     const biaya_operasional = req.body.biaya_operasional
     const tgl_input  = req.body.tgl_input
     
-    const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, warna_item, ukuran_item, biaya_operasional, id_penjual, id_kategori, tgl_input ) VALUES ('${nama_item}', '${harga_item}', '${deksripsi_item}', '${stok_item}', '${warna_item}', '${ukuran_item}', '${biaya_operasional}'  ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}), '${tgl_input}')`;
+    const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, warna_item, biaya_operasional, id_penjual, id_kategori, tgl_input ) VALUES ('${nama_item}', '${harga_item}', '${deksripsi_item}', '${stok_item}', '${warna_item}', '${biaya_operasional}'  ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}), '${tgl_input}')`;
 
     con.query(sqlQuery, (err, rows) => {
+      if(req.body.ukuran_item.length){
+        // req.body.ukuran_item.forEach(data => {
+        const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${ukuran_item}')`
+
+        con.query(ukuranItemQuery, (err, rows) => {
+          try {
+            return res.json()
+          } catch (error) {
+            return res.json()
+          }
+
+        // });
+      })
+      }
         try {
             if (req.files.length) {
                 req.files.forEach(item => {
@@ -354,11 +368,10 @@ app.post("/item", upload.array('foto_item', 10), (req,res) => {
                         }
                     );
                     const imagePath = `${__dirname}/uploads/${newFileName}`
-        
                     const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${rows.insertId}, '${imagePath}')`;
                     
                     con.query(addImageQuery, (err, rows) => {
-                        try {
+                      try {                     
                             return res.json()
                         } catch (err) {
                             return res.json()
@@ -385,7 +398,7 @@ app.put("/item", upload.array('foto_item', 10), (req,res) => {
   const deskripsi_item = req.body.deskripsi_item
   const stok_item = req.body.stok_item
   const warna_item = req.body.warna_item
-  const ukuran_item = req.body.ukuran_item
+  // const ukuran_item = req.body.ukuran_item
   const biaya_operasional = req.body.biaya_operasional
   const tgl_input  = req.body.tgl_input
   
@@ -449,8 +462,9 @@ app.post("/keranjang", (req, res) => {
   const id_pembeli = req.body.id_pembeli;
   const id_item = req.body.id_item;
   const jumlah = req.body.jumlah;
+  const total_harga = req.body.total_harga;
 
-  const sqlQuery = `INSERT INTO keranjang (id_pembeli, id_item, jumlah) VALUES ((SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${jumlah}')`;
+  const sqlQuery = `INSERT INTO keranjang (id_pembeli, id_item, jumlah, total_harga) VALUES ((SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${jumlah}', '${total_harga}')`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -499,6 +513,21 @@ app.put("/pembeli", (req, res) => {
   const alamat = req.body.alamat;
 
   const sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
+app.put("/alamat-pembeli", (req, res) => {
+  const id = req.body.id_pembeli;
+  const alamat = req.body.alamat;
+
+  const sqlQuery = `UPDATE pembeli SET alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -595,7 +624,7 @@ app.get("/metode_pembayaran/:id", (req, res) => {
   const sqlQuery = `SELECT * FROM metode_pembayaran WHERE id_mp = ${id}`;
   con.query(sqlQuery, (err, rows) => {
     try {
-      res.json(row.length ? rows[0] : {});
+      res.json(rows[0]);
     } catch (error) {
       res.json({ message: error.message });
     }
