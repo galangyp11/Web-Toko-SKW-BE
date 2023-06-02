@@ -58,7 +58,7 @@ app.get("/", function (req, res, next) {
 
 app.get("/item", (req,res) => {
     // console.log('req', req)
-    const sqlQuery = "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item ";
+    const sqlQuery = "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual ";
     con.query(sqlQuery, (err, rows) => {
         // console.log('rows', rows)
         try {
@@ -88,7 +88,7 @@ app.get("/item", (req,res) => {
 app.get("/item/:id", (req,res) => {
     const id = req.params.id;
     
-    const sqlQuery = `SELECT * FROM item JOIN penjual ON item.id_penjual = penjual.id_penjual JOIN item_ukuran ON item.id_item = item_ukuran.id_item where item.id_item = ${id}`;
+    const sqlQuery = `SELECT * FROM item JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_ukuran ON item.id_item = item_ukuran.id_item where item.id_item = ${id}`;
     con.query(sqlQuery, (err, rows) => {
 
         try {
