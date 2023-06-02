@@ -58,7 +58,7 @@ app.get("/", function (req, res, next) {
 
 app.get("/item", (req, res) => {
   // console.log('req', req)
-  const sqlQuery =
+  let sqlQuery =
     "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item ";
 
   if (req.query.search) {
