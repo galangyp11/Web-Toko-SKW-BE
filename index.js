@@ -6,6 +6,8 @@ const mysql = require("mysql");
 const bodyParser = require("body-parser");
 const multer = require("multer");
 const fs = require("fs");
+const path = require("path");
+const dir = path.join(__dirname, "public");
 
 const port = 3311;
 
@@ -49,7 +51,36 @@ app.use(
 //     }
 // })
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: "public/" });
+
+const mime = {
+  html: "text/html",
+  txt: "text/plain",
+  css: "text/css",
+  gif: "image/gif",
+  jpg: "image/jpeg",
+  png: "image/png",
+  svg: "image/svg+xml",
+  js: "application/javascript",
+};
+
+app.get("*", function (req, res) {
+  const file = path.join(dir, req.path.replace(/\/$/, "/index.html"));
+  console.log("file", file);
+  if (file.indexOf(dir + path.sep) !== 0) {
+    return res.status(403).end("Forbidden");
+  }
+  const type = mime[path.extname(file).slice(1)] || "text/plain";
+  const s = fs.createReadStream(file);
+  s.on("open", function () {
+    res.set("Content-Type", type);
+    s.pipe(res);
+  });
+  s.on("error", function () {
+    res.set("Content-Type", "text/plain");
+    res.status(404).end("Not found");
+  });
+});
 
 app.get("/", function (req, res, next) {
   // console.log(req)
@@ -58,10 +89,22 @@ app.get("/", function (req, res, next) {
 
 app.get("/item", (req, res) => {
   // console.log('req', req)
-  let sqlQuery =
-    "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual ";
+  let sqlQuery = `
+      SELECT
+        *,
+        item.id_item AS id
+      FROM
+        item
+      JOIN kategori ON
+        item.id_kategori = kategori.id_kategori
+      LEFT JOIN penjual ON
+        item.id_penjual = penjual.id_penjual
+      LEFT JOIN item_gambar ON
+        item.id_item = item_gambar.id_item
+    `;
 
   if (req.query.search) {
+    console.log("here?");
     sqlQuery += ` WHERE item.nama_item LIKE '%${req.query.search}%'`;
   }
 
@@ -71,16 +114,21 @@ app.get("/item", (req, res) => {
       const data = rows.reduce((results, i) => {
         // console.log('results', results)
         // console.log('i', i)
-        const idx = results.findIndex((item) => item.id_item === i.id_item);
-
+        const idx = results.findIndex((item) => item.id === i.id);
+        console.log("idx", idx);
+        console.log("i", i);
         if (idx < 0) {
           i.gambar = [i.gambar];
           results.push(i);
           return results;
         }
         results[idx].gambar.push(i.gambar);
+
+        // results.push(i);
         return results;
       }, []);
+
+      console.log("data", data);
       res.json(data);
     } catch (error) {
       console.log(error);
@@ -363,13 +411,13 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
           let newFileName = item.filename + "." + fileType;
 
           fs.rename(
-            `./uploads/${item.filename}`,
-            `./uploads/${newFileName}`,
+            `./public/${item.filename}`,
+            `./public/${newFileName}`,
             function () {
               console.log("file renamed and uploaded");
             }
           );
-          const imagePath = `${__dirname}/uploads/${newFileName}`;
+          const imagePath = `${__dirname}/public/${newFileName}`;
           const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${rows.insertId}, '${imagePath}')`;
 
           con.query(addImageQuery, (err, rows) => {
@@ -440,13 +488,13 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
           let newFileName = item.filename + "." + fileType;
 
           fs.rename(
-            `./uploads/${item.filename}`,
-            `./uploads/${newFileName}`,
+            `./public/${item.filename}`,
+            `./public/${newFileName}`,
             function () {
               console.log("file renamed and uploaded");
             }
           );
-          const imagePath = `${__dirname}/uploads/${newFileName}`;
+          const imagePath = `${__dirname}/public/${newFileName}`;
 
           const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${rows.insertId}, '${imagePath}')`;
 
