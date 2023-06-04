@@ -59,7 +59,7 @@ app.get("/", function (req, res, next) {
 app.get("/item", (req, res) => {
   // console.log('req', req)
   let sqlQuery =
-    "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_gambar ON item.id_item = item_gambar.id_item ";
+    "SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual ";
 
   if (req.query.search) {
     sqlQuery += ` WHERE item.nama_item LIKE '%${req.query.search}%'`;
@@ -92,10 +92,23 @@ app.get("/item", (req, res) => {
 app.get("/item/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM item JOIN penjual ON item.id_penjual = penjual.id_penjual JOIN item_ukuran ON item.id_item = item_ukuran.id_item where item.id_item = ${id}`;
+  const sqlQuery = `SELECT * FROM item JOIN penjual ON item.id_penjual = penjual.id_penjual WHERE item.id_item = ${id}`;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows[0]);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.get("/item-ukuran/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `SELECT * FROM item_ukuran WHERE id_item = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
     } catch (error) {
       res.json({ message: error.message });
     }
@@ -319,17 +332,29 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
   con.query(sqlQuery, (err, rows) => {
     if (req.body.ukuran_item.length) {
       // req.body.ukuran_item.forEach(data => {
-      const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${ukuran_item}')`;
-
-      con.query(ukuranItemQuery, (err, rows) => {
-        try {
-          return res.json();
-        } catch (error) {
-          return res.json();
-        }
-
-        // });
-      });
+      if (req.body.ukuran_item === "Semua Ukuran") {
+        const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${ukuran_item}')`;
+        con.query(ukuranItemQuery, (err, rows) => {
+          try {
+            return res.json();
+          } catch (error) {
+            return res.json();
+          }
+        });
+      } else {
+      req.body.ukuran_item.forEach((data)=>{
+        let iUkuran_item = data.split(" ")
+        const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${iUkuran_item}')`;
+      
+          con.query(ukuranItemQuery, (err, rows) => {
+            try {
+              return res.json();
+            } catch (error) {
+              return res.json();
+            }
+          });
+        })
+      }
     }
     try {
       if (req.files.length) {
@@ -375,15 +400,39 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
   const deskripsi_item = req.body.deskripsi_item;
   const stok_item = req.body.stok_item;
   const warna_item = req.body.warna_item;
-  // const ukuran_item = req.body.ukuran_item
+  const ukuran_item = req.body.ukuran_item
   const biaya_operasional = req.body.biaya_operasional;
   const tgl_input = req.body.tgl_input;
 
-  const sqlQuery = `UPDATE item SET nama_item = '${nama_item}', harga_item = '${harga_item}', deskripsi_item = '${deskripsi_item}', stok_item = '${stok_item}', warna_item = '${warna_item}', ukuran_item = '${ukuran_item}', biaya_operasional = '${biaya_operasional}' id_penjual = '${id_penjual}', id_kategori = '${id_kategori}', tgl_input = '${tgl_input}' WHERE item.id_item = ${id_item}`;
-
-  // UPDATE penjual SET email = '${email}', nama_toko = '${nama_toko}', logo_toko = '${logo_toko}', password = '${password}', alamat = '${alamat}', whatsapp = '${whatsapp}', no_rek_penjual = '${no_rek_penjual}' WHERE penjual.id_penjual = ${id}
+  const sqlQuery = `UPDATE item SET nama_item = '${nama_item}', harga_item = '${harga_item}', deskripsi_item = '${deskripsi_item}', stok_item = '${stok_item}', warna_item = '${warna_item}',  biaya_operasional = '${biaya_operasional}' id_penjual = '${id_penjual}', id_kategori = '${id_kategori}', tgl_input = '${tgl_input}' WHERE item.id_item = ${id_item}`;
 
   con.query(sqlQuery, (err, rows) => {
+    if (req.body.ukuran_item.length) {
+      // req.body.ukuran_item.forEach(data => {
+      if (req.body.ukuran_item === "Semua Ukuran") {
+        const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${ukuran_item}')`;
+        con.query(ukuranItemQuery, (err, rows) => {
+          try {
+            return res.json();
+          } catch (error) {
+            return res.json();
+          }
+        });
+      } else {
+      req.body.ukuran_item.forEach((data)=>{
+        let iUkuran_item = data.split(" ")
+        const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${iUkuran_item}')`;
+      
+          con.query(ukuranItemQuery, (err, rows) => {
+            try {
+              return res.json();
+            } catch (error) {
+              return res.json();
+            }
+          });
+        })
+      }
+    }
     try {
       if (req.files.length) {
         req.files.forEach((item) => {
