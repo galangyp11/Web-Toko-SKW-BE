@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -28,7 +29,7 @@ app.listen(process.env.PORT || port, () => {
 let con = mysql.createConnection({
   host: "Localhost",
   user: "root",
-  password: "",
+  password: process.env.DB_PASSWORD,
   database: "skw",
 });
 
@@ -518,7 +519,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
               console.log("file renamed and uploaded");
             }
           );
-          const imagePath = `${__dirname}/public/${newFileName}`;
+          const imagePath = `${newFileName}`;
           const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${rows.insertId}, '${imagePath}')`;
 
           con.query(addImageQuery, (err, rows) => {
