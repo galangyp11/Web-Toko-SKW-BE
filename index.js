@@ -454,7 +454,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
   const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, biaya_operasional, id_penjual, id_kategori, tgl_input ) VALUES ('${nama_item}', '${harga_item}', '${deksripsi_item}', '${stok_item}', '${biaya_operasional}' ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}), '${tgl_input}')`;
 
   con.query(sqlQuery, (err, rows) => {
-    const riwayatQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${rows.insertId}, ${tgl_input})`;
+    const riwayatQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${rows.insertId}, '${tgl_input}')`;
     con.query(riwayatQuery, (err, rows) => {
       try {
         return res.json();
