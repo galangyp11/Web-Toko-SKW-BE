@@ -462,8 +462,8 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
         return res.json();
       }
     });
-    console.log("before ukurant item");
-    if (req.body?.ukuran_item?.length !== 0) {
+
+    if (req.body?.ukuran_item?.length > 0) {
       // req.body.ukuran_item.forEach(data => {
       if (req.body?.ukuran_item === "Semua Ukuran") {
         const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${ukuran_item}')`;
@@ -489,8 +489,8 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
         });
       }
     }
-    console.log("before warna item");
-    if (warna_item?.length !== 0) {
+
+    if (warna_item?.length > 0) {
       req.body.warna_item.forEach((data) => {
         let iWarna_item = data.split(" ");
         const warnaItemQuery = `INSERT INTO item_warna (id_item, nama_warna) VALUES (${rows.insertId}, '${iWarna_item}')`;
@@ -505,7 +505,6 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
       });
     }
 
-    console.log("reqfiles", req.files);
     try {
       if (req.files.length) {
         req.files.forEach((item) => {
