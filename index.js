@@ -86,13 +86,13 @@ app.get("/item", (req, res) => {
   `;
 
   if (req.query.search) {
-    sqlQuery += ` WHERE item.nama_item LIKE '%${req.query.search}%'`;
+    sqlQuery += ` WHERE i.nama_item LIKE '%${req.query.search}%' OR kategori.nama_kategori LIKE '%${req.query.search}%'`;
   }
 
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
-
-    rows.forEach((r) => {
+    
+    rows?.forEach((r) => {
       idItems.push(r.id_item);
     });
     let imageQuery = `
@@ -105,7 +105,7 @@ app.get("/item", (req, res) => {
 
     try {
       con.query(imageQuery, (err, images) => {
-        const data = rows.map((r) => {
+        const data = rows?.map((r) => {
           return {
             ...r,
             gambar: images
@@ -115,7 +115,7 @@ app.get("/item", (req, res) => {
               : [],
           };
         });
-
+        console.log('data', data)
         try {
           res.json(data);
         } catch (error) {
