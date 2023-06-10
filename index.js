@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -28,7 +29,7 @@ app.listen(process.env.PORT || port, () => {
 let con = mysql.createConnection({
   host: "Localhost",
   user: "root",
-  password: "",
+  password: process.env.DB_PASSWORD,
   database: "skw",
 });
 
