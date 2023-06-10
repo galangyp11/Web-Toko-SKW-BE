@@ -167,6 +167,60 @@ app.get("/item-ukuran/:id", (req, res) => {
   });
 });
 
+app.get("/riwayat-item-masuk", (req, res) => {
+  // console.log('req', req)
+  // let sqlQuery = `
+  //     SELECT
+  //       *,
+  //       item.id_item AS id
+  //     FROM
+  //       item
+  //     JOIN kategori ON
+  //       item.id_kategori = kategori.id_kategori
+  //     JOIN penjual ON
+  //       item.id_penjual = penjual.id_penjual
+  //     LEFT JOIN item_gambar ON
+  //       item.id_item = item_gambar.id_item
+  //   `;
+
+  let sqlQuery =
+  `SELECT  *,
+  riwayat_item_masuk.id_item AS id FROM riwayat_item_masuk JOIN penjual ON riwayat_item_masuk.id_penjual = penjual.id_penjual JOIN item ON riwayat_item_masuk.id_item = item.id_item`;
+
+  if (req.query.search) {
+    console.log("here?");
+    sqlQuery += ` WHERE riwayat_item_masuk.nama_item LIKE '%${req.query.search}%'`;
+  }
+
+  con.query(sqlQuery, (err, rows) => {
+    // console.log('rows', rows)
+    try {
+      const data = rows.reduce((results, i) => {
+        // console.log('results', results)
+        // console.log('i', i)
+        const idx = results.findIndex((item) => item.id === i.id);
+        console.log("idx", idx);
+        console.log("i", i);
+        if (idx < 0) {
+          i.gambar = [i.gambar];
+          results.push(i);
+          return results;
+        }
+        results[idx].gambar.push(i.gambar);
+
+        // results.push(i);
+        return results;
+      }, []);
+
+      console.log("data", data);
+      res.json(data);
+    } catch (error) {
+      console.log(error);
+      res.json({ message: error.message });
+    }
+  });
+});
+
 app.delete("/item/:id", (req, res) => {
   const id = req.params.id;
 
@@ -382,7 +436,15 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
   const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, biaya_operasional, id_penjual, id_kategori, tgl_input ) VALUES ('${nama_item}', '${harga_item}', '${deksripsi_item}', '${stok_item}', '${biaya_operasional}' ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}), '${tgl_input}')`;
 
   con.query(sqlQuery, (err, rows) => {
-    if (req.body.ukuran_item.length) {
+    const riwayatQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${rows.insertId}, ${tgl_input})`;
+    con.query(riwayatQuery, (err, rows) => {
+      try {
+        return res.json();
+      } catch (error) {
+        return res.json();
+      }
+    });
+    if (!req.body.ukuran_item.length === 0) {
       // req.body.ukuran_item.forEach(data => {
       if (req.body.ukuran_item === "Semua Ukuran") {
         const ukuranItemQuery = `INSERT INTO item_ukuran (id_item, nama_ukuran) VALUES (${rows.insertId}, '${ukuran_item}')`;
@@ -409,7 +471,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
       }
     }
 
-    if (req.body.warna_item.length) {
+    if (!warna_item.length === 0) {
   
       req.body.warna_item.forEach((data)=>{
         let iWarna_item = data.split(" ")
@@ -459,6 +521,21 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
   return res.json();
 });
 
+app.post("/riwayat-item-masuk", (req, res) => {
+  const id_item = req.body.id_item;
+  const id_penjual = req.body.id_penjual;
+  const tanggal = req.body.tgl_input
+
+  const sqlQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${id_item}, '${tanggal}')`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (error) {
+      return res.json();
+    }
+  })
+});
+
 app.get("/item-ukuran/:id", (req, res) => {
   const id = req.params.id;
 
@@ -495,16 +572,15 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
   const deskripsi_item = req.body.deskripsi_item;
   const stok_item = req.body.stok_item;
   const warna_item = req.body.warna_item;
-  const ukuran_item = req.body.ukuran_item
+  const ukuran_item = req.body.ukuran_item;
   const biaya_operasional = req.body.biaya_operasional;
 
   const sqlQuery = `UPDATE item SET nama_item = '${nama_item}', harga_item = '${harga_item}', deskripsi_item = '${deskripsi_item}', stok_item = '${stok_item}',  biaya_operasional = '${biaya_operasional}' id_penjual = '${id_penjual}', id_kategori = '${id_kategori}' WHERE item.id_item = ${id_item}`;
 
   con.query(sqlQuery, (err, rows) => {
     if (req.body.ukuran_item.length) {
-      // req.body.ukuran_item.forEach(data => {
       if (req.body.ukuran_item === "Semua Ukuran") {
-        const ukuranItemQuery = `UPDATE item_ukuran SET nama_ukuran = '${ukuran_item}' WHERE item.id_item = ${rows.insertId}`;
+        const ukuranItemQuery = `UPDATE item_ukuran SET nama_ukuran = '${ukuran_item}' WHERE item.id_item = ${id_item}`;
         con.query(ukuranItemQuery, (err, rows) => {
           try {
             return res.json();
@@ -515,7 +591,7 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
       } else {
       req.body.ukuran_item.forEach((data)=>{
         let iUkuran_item = data.split(" ")
-        const ukuranItemQuery = `UPDATE item_ukuran SET nama_ukuran = '${iUkuran_item}' WHERE item.id_item = ${rows.insertId}`;
+        const ukuranItemQuery = `UPDATE item_ukuran SET nama_ukuran = '${iUkuran_item}' WHERE item.id_item = ${id_item}`;
       
           con.query(ukuranItemQuery, (err, rows) => {
             try {
@@ -532,7 +608,7 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
   
       req.body.warna_item.forEach((data)=>{
         let iWarna_item = data.split(" ")
-        const warnaItemQuery = `UPDATE item_warna SET nama_warna = '${iWarna_item}' WHERE item.id_item = ${rows.insertId}`;
+        const warnaItemQuery = `UPDATE item_warna SET nama_warna = '${iWarna_item}' WHERE item.id_item = ${id_item}`;
       
           con.query(warnaItemQuery, (err, rows) => {
             try {
@@ -543,36 +619,36 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
           });
         })
     }
-    try {
-      if (req.files.length) {
-        req.files.forEach((item) => {
-          const fileType = item.mimetype.split("/")[1];
-          let newFileName = item.filename + "." + fileType;
+    // try {
+    //   if (req.files.length) {
+    //     req.files.forEach((item) => {
+    //       const fileType = item.mimetype.split("/")[1];
+    //       let newFileName = item.filename + "." + fileType;
 
-          fs.rename(
-            `./public/${item.filename}`,
-            `./public/${newFileName}`,
-            function () {
-              console.log("file renamed and uploaded");
-            }
-          );
-          const imagePath = `${__dirname}/public/${newFileName}`;
+    //       fs.rename(
+    //         `./public/${item.filename}`,
+    //         `./public/${newFileName}`,
+    //         function () {
+    //           console.log("file renamed and uploaded");
+    //         }
+    //       );
+    //       const imagePath = `${__dirname}/public/${newFileName}`;
 
-          const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${rows.insertId}, '${imagePath}')`;
+    //       const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${id_item}, '${imagePath}')`;
 
-          con.query(addImageQuery, (err, rows) => {
-            try {
-              return res.json();
-            } catch (err) {
-              return res.json();
-            }
-          });
-        });
-      }
-      return res.json();
-    } catch (err) {
-      return res.json();
-    }
+    //       con.query(addImageQuery, (err, rows) => {
+    //         try {
+    //           return res.json();
+    //         } catch (err) {
+    //           return res.json();
+    //         }
+    //       });
+    //     });
+    //   }
+    //   return res.json();
+    // } catch (err) {
+    //   return res.json();
+    // }
   });
 
   return res.json();
