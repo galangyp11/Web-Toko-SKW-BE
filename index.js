@@ -133,7 +133,7 @@ app.get("/item", (req, res) => {
 app.get("/item/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT *, item.id_item FROM item JOIN penjual ON item.id_penjual = penjual.id_penjual WHERE item.id_item = ${id}`;
+  const sqlQuery = `SELECT *, item.id_item FROM item JOIN penjual ON item.id_penjual = penjual.id_penjual LEFT JOIN item_ukuran ON item.id_item = item_ukuran.id_item WHERE item.id_item = ${id}`;
   con.query(sqlQuery, (err, rows) => {
     try {
       const idItems = [];
@@ -240,6 +240,35 @@ app.get("/riwayat-item-masuk", (req, res) => {
   });
 });
 
+app.post("/riwayat-item-keluar", (req, res) => {
+  const id_pembeli = req.body.id_pembeli;
+  const id_item = req.body.id_item;
+  const id_penjual = req.body.id_penjual;
+  const id_transaksi = req.body.id_transaksi;
+  const tanggal = req.body.tgl_input;
+
+  const sqlQuery = `INSERT INTO riwayat_item_keluar (id_pembeli, id_penjual, id_item, id_transaksi, tanggal) VALUES ((SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${id_item}, (SELECT id_transaksi FROM transaksi WHERE id_transaksi = ${id_transaksi}), '${tanggal}')`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (error) {
+      return res.json();
+    }
+  });
+});
+
+app.get("/riwayat-item-keluar", (req, res) => {
+  let sqlQuery = `SELECT * FROM riwayat_item_keluar JOIN pembeli ON riwayat_item_keluar.id_pembeli = pembeli.id_pembeli JOIN item ON riwayat_item_keluar.id_item = item.id_item JOIN penjual ON riwayat_item_keluar.id_penjual = penjual.id_penjual JOIN transaksi ON riwayat_item_keluar.id_transaksi = transaksi.id_transaksi`;
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows)
+    } catch (error) {
+      res.json(err)
+    }
+  });
+});
+
 app.delete("/item/:id", (req, res) => {
   const id = req.params.id;
 
@@ -304,11 +333,17 @@ app.get("/admin/:id", (req, res) => {
 });
 
 app.get("/pembeli", (req, res) => {
-  const sqlQuery = `SELECT * FROM pembeli`;
+  let sqlQuery = `SELECT * FROM pembeli `;
+
+  if(req.query.search) {    
+    sqlQuery += `WHERE username LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
+  }
+
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
     } catch (error) {
+      // console.log(error);
       res.json({ message: error.message });
     }
   });
@@ -341,7 +376,12 @@ app.delete("/pembeli/:id", (req, res) => {
 });
 
 app.get("/penjual", (req, res) => {
-  const sqlQuery = `SELECT * FROM penjual`;
+  let sqlQuery = `SELECT * FROM penjual`;
+
+  if(req.query.search) {    
+    sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
+  }
+
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
@@ -868,7 +908,7 @@ app.get("/transaksi", (req, res) => {
 });
 
 app.get("/transaksi/pembeli", (req, res) => {
-  const sqlQuery = `SELECT * FROM transaksi JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual`;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
@@ -881,7 +921,7 @@ app.get("/transaksi/pembeli", (req, res) => {
 app.get("/transaksi/pembeli/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp WHERE transaksi.id_pembeli = ${id}`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id}`;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
