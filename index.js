@@ -65,6 +65,9 @@ const mime = {
   js: "application/javascript",
 };
 
+const DEFAULT_OFFSET = 0;
+const DEFAULT_LIMIT = 10;
+
 app.use(express.static(__dirname + "/public"));
 
 app.get("/", function (req, res, next) {
@@ -89,9 +92,20 @@ app.get("/item", (req, res) => {
     sqlQuery += ` WHERE i.nama_item LIKE '%${req.query.search}%' OR kategori.nama_kategori LIKE '%${req.query.search}%'`;
   }
 
+  /** get offset by page */
+  let offset = DEFAULT_OFFSET;
+  if (req.query.page && Number(req.query.page) > 0) {
+    offset = (Number(req.query.page) - 1) * Number(req.query.limit);
+  }
+
+  sqlQuery += `
+    LIMIT ${req.query.limit ?? DEFAULT_LIMIT}
+    OFFSET ${offset} 
+  `;
+
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
-    
+
     rows?.forEach((r) => {
       idItems.push(r.id_item);
     });
@@ -115,7 +129,6 @@ app.get("/item", (req, res) => {
               : [],
           };
         });
-        console.log('data', data)
         try {
           res.json(data);
         } catch (error) {
@@ -262,9 +275,9 @@ app.get("/riwayat-item-keluar", (req, res) => {
 
   con.query(sqlQuery, (err, rows) => {
     try {
-      res.json(rows)
+      res.json(rows);
     } catch (error) {
-      res.json(err)
+      res.json(err);
     }
   });
 });
@@ -335,7 +348,7 @@ app.get("/admin/:id", (req, res) => {
 app.get("/pembeli", (req, res) => {
   let sqlQuery = `SELECT * FROM pembeli `;
 
-  if(req.query.search) {    
+  if (req.query.search) {
     sqlQuery += `WHERE username LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
   }
 
@@ -378,7 +391,7 @@ app.delete("/pembeli/:id", (req, res) => {
 app.get("/penjual", (req, res) => {
   let sqlQuery = `SELECT * FROM penjual`;
 
-  if(req.query.search) {    
+  if (req.query.search) {
     sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
   }
 
