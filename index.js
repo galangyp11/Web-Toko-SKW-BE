@@ -95,7 +95,8 @@ app.get("/item", (req, res) => {
   /** get offset by page */
   let offset = DEFAULT_OFFSET;
   if (req.query.page && Number(req.query.page) > 0) {
-    offset = (Number(req.query.page) - 1) * Number(req.query.limit);
+    offset =
+      (Number(req.query.page) - 1) * Number(req.query.limit ?? DEFAULT_LIMIT);
   }
 
   sqlQuery += `
