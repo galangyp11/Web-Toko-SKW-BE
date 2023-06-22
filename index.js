@@ -144,6 +144,14 @@ app.get("/item", (req, res) => {
   });
 });
 
+app.get("/total-item", (req, res) => {
+  let sqlQuery = `SELECT * FROM item`
+  
+  con.query(sqlQuery, (err, rows) => {
+    res.json(rows)
+  })
+})
+
 app.get("/item/:id", (req, res) => {
   const id = req.params.id;
 
@@ -226,6 +234,20 @@ app.get("/riwayat-item-masuk", (req, res) => {
   //   console.log("here?");
   //   sqlQuery += ` WHERE riwayat_item_masuk.nama_item LIKE '%${req.query.search}%'`;
   // }
+  if (req.query.search) {
+    sqlQuery += ` WHERE nama_item LIKE '%${req.query.search}%' OR nama_toko LIKE '%${req.query.search}%'`;
+  }
+
+  let offset = DEFAULT_OFFSET;
+  if (req.query.page && Number(req.query.page) > 0) {
+    offset =
+      (Number(req.query.page) - 1) * Number(req.query.limit ?? DEFAULT_LIMIT);
+  }
+
+  sqlQuery += `
+    LIMIT ${req.query.limit ?? DEFAULT_LIMIT}
+    OFFSET ${offset} 
+  `;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -273,6 +295,20 @@ app.put("/riwayat-item-masuk", (req, res) => {
 app.get("/riwayat-item-keluar", (req, res) => {
   let sqlQuery = `SELECT * FROM riwayat_item_keluar JOIN pembeli ON riwayat_item_keluar.id_pembeli = pembeli.id_pembeli JOIN item ON riwayat_item_keluar.id_item = item.id_item JOIN penjual ON riwayat_item_keluar.id_penjual = penjual.id_penjual JOIN transaksi ON riwayat_item_keluar.id_transaksi = transaksi.id_transaksi`;
 
+  if (req.query.search) {
+    sqlQuery += ` WHERE nama_item LIKE '%${req.query.search}%' OR username LIKE '%${req.query.search}%' `;
+  }
+
+  let offset = DEFAULT_OFFSET;
+  if (req.query.page && Number(req.query.page) > 0) {
+    offset =
+      (Number(req.query.page) - 1) * Number(req.query.limit ?? DEFAULT_LIMIT);
+  }
+
+  sqlQuery += `
+    LIMIT ${req.query.limit ?? DEFAULT_LIMIT}
+    OFFSET ${offset} 
+  `;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
@@ -298,7 +334,22 @@ app.delete("/item/:id", (req, res) => {
 app.get("/item-penjual/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual where item.id_penjual = ${id}`;
+  let sqlQuery = `SELECT * FROM item JOIN kategori ON item.id_kategori = kategori.id_kategori JOIN penjual ON item.id_penjual = penjual.id_penjual where item.id_penjual = ${id}`;
+
+  if (req.query.search) {
+    sqlQuery += ` WHERE nama_item LIKE '%${req.query.search}%' OR nama_kategori LIKE '%${req.query.search}%' `;
+  }
+
+  let offset = DEFAULT_OFFSET;
+  if (req.query.page && Number(req.query.page) > 0) {
+    offset =
+      (Number(req.query.page) - 1) * Number(req.query.limit ?? DEFAULT_LIMIT);
+  }
+
+  sqlQuery += `
+    LIMIT ${req.query.limit ?? DEFAULT_LIMIT}
+    OFFSET ${offset} 
+  `;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
@@ -332,6 +383,46 @@ app.get("/kategori/:id", (req, res) => {
   });
 });
 
+app.post("/kategori", (req, res) => {
+  const nama_kategori = req.body.nama_kategori;
+
+  const sqlQuery = `INSERT INTO kategori (nama_kategori) VALUES ('${nama_kategori}')`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json();
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.put("/kategori", (req, res) => {
+  const id_kategori = req.body.id_kategori;
+  const nama_kategori = req.body.nama_kategori;
+
+  const sqlQuery = `UPDATE kategori SET nama_kategori = '${nama_kategori}' WHERE id_kategori = '${id_kategori}'`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json();
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.delete("/kategori/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `DELETE FROM kategori WHERE id_kategori = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
 app.get("/admin/:id", (req, res) => {
   const id = req.params.id;
 
@@ -351,6 +442,17 @@ app.get("/pembeli", (req, res) => {
   if (req.query.search) {
     sqlQuery += `WHERE username LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
   }
+
+  let offset = DEFAULT_OFFSET;
+  if (req.query.page && Number(req.query.page) > 0) {
+    offset =
+      (Number(req.query.page) - 1) * Number(req.query.limit ?? DEFAULT_LIMIT);
+  }
+
+  sqlQuery += `
+    LIMIT ${req.query.limit ?? DEFAULT_LIMIT}
+    OFFSET ${offset} 
+  `;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -392,8 +494,19 @@ app.get("/penjual", (req, res) => {
   let sqlQuery = `SELECT * FROM penjual`;
 
   if (req.query.search) {
-    sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
+    sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%'`;
   }
+
+  let offset = DEFAULT_OFFSET;
+  if (req.query.page && Number(req.query.page) > 0) {
+    offset =
+      (Number(req.query.page) - 1) * Number(req.query.limit ?? DEFAULT_LIMIT);
+  }
+
+  sqlQuery += `
+    LIMIT ${req.query.limit ?? DEFAULT_LIMIT}
+    OFFSET ${offset} 
+  `;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -952,6 +1065,19 @@ app.delete("/checkout", (req, res) => {
   });
 });
 
+app.get("/metode_pembayaran", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `SELECT * FROM metode_pembayaran`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
 app.get("/metode_pembayaran/:id", (req, res) => {
   const id = req.params.id;
 
@@ -1027,7 +1153,23 @@ app.get("/transaksi-proses/penjual/:id", (req, res) => {
 });
 
 app.get("/transaksi/riwayat", (req, res) => {
-  const sqlQuery = `SELECT * FROM transaksi JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN item ON transaksi.id_item = item.id_item`;
+  let sqlQuery = `SELECT * FROM transaksi JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN item ON transaksi.id_item = item.id_item`;
+  
+  if (req.query.search) {
+    sqlQuery += ` WHERE nama_item LIKE '%${req.query.search}%' OR username LIKE '%${req.query.search}%' OR status_transaksi LIKE '%${req.query.search}%' OR nama_mp LIKE '%${req.query.search}%'`;
+  }
+  
+  let offset = DEFAULT_OFFSET;
+  if (req.query.page && Number(req.query.page) > 0) {
+    offset =
+      (Number(req.query.page) - 1) * Number(req.query.limit ?? DEFAULT_LIMIT);
+  }
+
+  sqlQuery += `
+    LIMIT ${req.query.limit ?? DEFAULT_LIMIT}
+    OFFSET ${offset} 
+  `;
+  
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
