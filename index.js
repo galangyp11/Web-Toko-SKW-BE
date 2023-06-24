@@ -668,7 +668,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
       }
     }
 
-    if (warna_item?.length > 0) {
+    if (warna_item?.length === 1) {
       const sqlQuery = `INSERT INTO item_warna (id_item, nama_warna) VALUES (${rows.insertId}, '${warna_item}')`;
 
       con.query(sqlQuery, (err, rows) => {
@@ -681,6 +681,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
     } else if (warna_item?.length > 1) {
       req.body.warna_item.forEach((data) => {
         let iWarna_item = data.split(" ");
+        console.log('iWarna',iWarna_item)
         const warnaItemQuery = `INSERT INTO item_warna (id_item, nama_warna) VALUES (${rows.insertId}, '${iWarna_item}')`;
 
         con.query(warnaItemQuery, (err, rows) => {
