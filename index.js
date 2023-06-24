@@ -9,8 +9,6 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const dir = path.join(__dirname, "public");
-const { File } = "@web-std/file";
-
 const port = 3311;
 
 app.use(
@@ -394,10 +392,23 @@ app.get("/kategori/:id", (req, res) => {
 
 app.post("/kategori", (req, res) => {
   const nama_kategori = req.body.nama_kategori;
+  const foto_kategori = req.body.foto_kategori;
+  const base64Data = foto_kategori?.[0].replace(
+    /^data:([A-Za-z-+/]+);base64,/,
+    ""
+  );
+  const buff = Buffer.from(base64Data, "base64");
 
-  const sqlQuery = `INSERT INTO kategori (nama_kategori) VALUES ('${nama_kategori}')`;
-  con.query(sqlQuery, (err, rows) => {
+  const values = { nama_kategori, foto_kategori: buff };
+  const sqlQuery = `
+    INSERT INTO kategori SET ?
+  `;
+  console.log("sqlQuery", sqlQuery);
+  console.log("val", values);
+  con.query(sqlQuery, values, (err, rows) => {
     try {
+      console.log("err", err);
+      console.log("rows", rows);
       res.json();
     } catch (error) {
       res.json({ message: error.message });
@@ -408,9 +419,16 @@ app.post("/kategori", (req, res) => {
 app.put("/kategori", (req, res) => {
   const id_kategori = req.body.id_kategori;
   const nama_kategori = req.body.nama_kategori;
+  const foto_kategori = req.body.foto_kategori;
+  const base64Data = foto_kategori?.[0].replace(
+    /^data:([A-Za-z-+/]+);base64,/,
+    ""
+  );
+  const buff = Buffer.from(base64Data, "base64");
+  const values = { nama_kategori, foto_kategori: buff };
 
-  const sqlQuery = `UPDATE kategori SET nama_kategori = '${nama_kategori}' WHERE id_kategori = '${id_kategori}'`;
-  con.query(sqlQuery, (err, rows) => {
+  const sqlQuery = `UPDATE kategori SET ? WHERE id_kategori = '${id_kategori}'`;
+  con.query(sqlQuery, values, (err, rows) => {
     try {
       res.json();
     } catch (error) {
@@ -682,7 +700,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
     } else if (warna_item?.length > 1) {
       req.body.warna_item.forEach((data) => {
         let iWarna_item = data.split(" ");
-        console.log('iWarna',iWarna_item)
+        console.log("iWarna", iWarna_item);
         const warnaItemQuery = `INSERT INTO item_warna (id_item, nama_warna) VALUES (${rows.insertId}, '${iWarna_item}')`;
 
         con.query(warnaItemQuery, (err, rows) => {
@@ -885,7 +903,7 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
         "data:image/".length,
         i.indexOf(";base64")
       );
-      console.log("imgtype", imageTypeBase64);
+
       const filename = `${Math.floor(Date.now() / 1000)}.${imageTypeBase64}`;
       fs.writeFile(`./public/${filename}`, base64Data, "base64", (err) => {
         console.error(err);
@@ -905,32 +923,33 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
   }
 
   if (req.body?.id_foto_item_delete?.length) {
-    
-
-    const getImageQuery = `SELECT gambar from item_gambar where id_gambar IN (${req.body?.id_foto_item_delete?.join(',')})`;
+    const getImageQuery = `SELECT gambar from item_gambar where id_gambar IN (${req.body?.id_foto_item_delete?.join(
+      ","
+    )})`;
 
     con.query(getImageQuery, (err, rows) => {
       try {
-        console.log('rows', rows)
-        rows?.forEach(r => {
-          const filePath = `./public/${r.gambar}`; 
+        console.log("rows", rows);
+        rows?.forEach((r) => {
+          const filePath = `./public/${r.gambar}`;
           fs.unlinkSync(filePath);
-        })
+        });
       } catch (err) {
         return res.json();
       }
     });
 
-    const deleteImageQuery = `DELETE from item_gambar where id_gambar IN (${req.body?.id_foto_item_delete?.join(',')})`;
+    const deleteImageQuery = `DELETE from item_gambar where id_gambar IN (${req.body?.id_foto_item_delete?.join(
+      ","
+    )})`;
 
     con.query(deleteImageQuery, (err, rows) => {
-      try { 
+      try {
         return res.json();
       } catch (err) {
         return res.json();
       }
     });
-    
   }
 
   return res.json();
