@@ -904,6 +904,35 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
     });
   }
 
+  if (req.body?.id_foto_item_delete?.length) {
+    
+
+    const getImageQuery = `SELECT gambar from item_gambar where id_gambar IN (${req.body?.id_foto_item_delete?.join(',')})`;
+
+    con.query(getImageQuery, (err, rows) => {
+      try {
+        console.log('rows', rows)
+        rows?.forEach(r => {
+          const filePath = `./public/${r.gambar}`; 
+          fs.unlinkSync(filePath);
+        })
+      } catch (err) {
+        return res.json();
+      }
+    });
+
+    const deleteImageQuery = `DELETE from item_gambar where id_gambar IN (${req.body?.id_foto_item_delete?.join(',')})`;
+
+    con.query(deleteImageQuery, (err, rows) => {
+      try { 
+        return res.json();
+      } catch (err) {
+        return res.json();
+      }
+    });
+    
+  }
+
   return res.json();
 });
 
