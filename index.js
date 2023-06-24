@@ -360,7 +360,12 @@ app.get("/item-penjual/:id", (req, res) => {
 });
 
 app.get("/kategori", (req, res) => {
-  const sqlQuery = `SELECT * FROM kategori`;
+  let sqlQuery = `SELECT * FROM kategori`;
+
+  if (req.query.search) {
+    sqlQuery += ` WHERE nama_kategori LIKE '%${req.query.search}%' `;
+  }
+
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
@@ -491,10 +496,10 @@ app.delete("/pembeli/:id", (req, res) => {
 });
 
 app.get("/penjual", (req, res) => {
-  let sqlQuery = `SELECT * FROM penjual`;
+  let sqlQuery = `SELECT * FROM penjual `;
 
   if (req.query.search) {
-    sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%'`;
+    sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
   }
 
   let offset = DEFAULT_OFFSET;
@@ -512,6 +517,7 @@ app.get("/penjual", (req, res) => {
     try {
       res.json(rows);
     } catch (error) {
+      // console.log(error);
       res.json({ message: error.message });
     }
   });
