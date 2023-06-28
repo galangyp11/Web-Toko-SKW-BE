@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const { error } = require("console");
 const dir = path.join(__dirname, "public");
 const port = 3311;
 
@@ -382,6 +383,7 @@ app.get("/kategori/:id", (req, res) => {
 
   const sqlQuery = `SELECT * FROM kategori JOIN item ON kategori.id_kategori = item.id_kategori WHERE kategori.id_kategori = ${id}`;
   con.query(sqlQuery, (err, rows) => {
+    console.log(rows)
     try {
       res.json(rows);
     } catch (error) {
@@ -792,6 +794,19 @@ app.get("/item-warna/:id", (req, res) => {
   });
 });
 
+app.get("/item-gambar/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `SELECT * FROM item_gambar WHERE id_item = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
 app.put("/item", upload.array("foto_item", 10), (req, res) => {
   console.log("reqbody", req);
   const id_item = req.body.id_item;
@@ -808,11 +823,11 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
   const sqlQuery = `UPDATE item SET nama_item = '${nama_item}', harga_item = ${harga_item}, deskripsi_item = '${deskripsi_item}', stok_item = ${stok_item},  biaya_operasional = ${biaya_operasional}, id_penjual = '${id_penjual}', id_kategori = ${id_kategori} WHERE item.id_item = ${id_item}`;
 
   con.query(sqlQuery, (err, rows) => {
-    try {
-      res.json();
-    } catch (error) {
-      res.json(err);
-    }
+    // try {
+    //   res.json();
+    // } catch (error) {
+    //   res.json(err);
+    // }
     if (req.body.ukuran_item.length > 0) {
       if (req.body.ukuran_item === "Semua Ukuran") {
         const ukuranItemQuery = `UPDATE item_ukuran SET nama_ukuran = '${ukuran_item}' WHERE item.id_item = ${id_item}`;
@@ -839,60 +854,27 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
       }
     }
 
-    // if (req.body.warna_item.length > 0) {
-    //   const sqlQuery = `UPDATE item_warna SET nama_warna = '${warna_item}' WHERE item.id_item = ${id_item}`;
-    //   con.query(sqlQuery, (err, rows) => {
-    //     try {
-    //       res.json()
-    //     } catch (error) {
-    //       res.json(err)
-    //     }
-    //   })
-    // } else if(req.body.warna_item.length > 1){
-    //   req.body.warna_item.forEach((data) => {
-    //     let iWarna_item = data.split(" ");
-    //     const warnaItemQuery = `UPDATE item_warna SET nama_warna = '${iWarna_item}' WHERE item.id_item = ${id_item}`;
+    if (req.body.warna_item.length === 1) {
+      const sqlQuery = `UPDATE item_warna SET nama_warna = '${warna_item}' WHERE item.id_item = ${id_item}`;
+      con.query(sqlQuery, (err, rows) => {
+        try {
+          res.json()
+        } catch (error) {
+          res.json(err)
+        }
+      })
+    } else if(req.body.warna_item.length > 1){
+      req.body.warna_item.forEach((data) => {
+        let iWarna_item = data.split(" ");
+        const warnaItemQuery = `UPDATE item_warna SET nama_warna = '${iWarna_item}' WHERE item.id_item = ${id_item}`;
 
-    //     con.query(warnaItemQuery, (err, rows) => {
-    //       try {
-    //         return res.json();
-    //       } catch (error) {
-    //         return res.json();
-    //       }
-    //     });
-    //   });
-
-    // try {
-    //   if (req.files.length) {
-    //     req.files.forEach((item) => {
-    //       const fileType = item.mimetype.split("/")[1];
-    //       let newFileName = item.filename + "." + fileType;
-
-    //       fs.rename(
-    //         `./public/${item.filename}`,
-    //         `./public/${newFileName}`,
-    //         function () {
-    //           console.log("file renamed and uploaded");
-    //         }
-    //       );
-    //       const imagePath = `${__dirname}/public/${newFileName}`;
-
-    //       const addImageQuery = `INSERT INTO item_gambar (id_item, gambar) VALUES (${id_item}, '${imagePath}')`;
-
-    //       con.query(addImageQuery, (err, rows) => {
-    //         try {
-    //           return res.json();
-    //         } catch (err) {
-    //           return res.json();
-    //         }
-    //       });
-    //     });
-    //   }
-    //   return res.json();
-    // } catch (err) {
-    //   return res.json();
-    // }
-  });
+        con.query(warnaItemQuery, (err, rows) => {
+          try {
+            return res.json();
+          } catch (error) {
+            return res.json();
+          }
+        });
 
   /** handle img */
   if (req.body?.foto_item?.length > 0) {
@@ -950,18 +932,51 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
         return res.json();
       }
     });
-  }
-
   return res.json();
-});
+    }
+  })
+  
+    }
+})
+})
 
 app.get("/keranjang/:id", (req, res) => {
   const id = req.params.id;
 
   const sqlQuery = `SELECT * FROM keranjang JOIN item ON keranjang.id_item = item.id_item JOIN pembeli ON keranjang.id_pembeli = pembeli.id_pembeli WHERE keranjang.id_pembeli = ${id}`;
   con.query(sqlQuery, (err, rows) => {
+    const idItems = [];
+
+    rows?.forEach((r) => {
+      idItems.push(r.id_item);
+    });
+    let imageQuery = `
+        SELECT
+            *
+            FROM
+        item_gambar ig 
+        WHERE ig.id_item IN (${idItems.join(",")}) 
+    `;
+
     try {
-      res.json(rows);
+      con.query(imageQuery, (err, images) => {
+        const data = rows?.map((r) => {
+          return {
+            ...r,
+            gambar: images
+              ? images
+                  ?.filter((i) => i.id_item === r.id_item)
+                  ?.map((i) => i.gambar)
+              : [],
+          };
+        });
+        try {
+          res.json(data);
+        } catch (error) {
+          console.log(error);
+          res.json({ message: error.message });
+        }
+      });
     } catch (error) {
       res.json({ message: error.message });
     }
@@ -990,6 +1005,8 @@ app.post("/keranjang", (req, res) => {
   const jumlah = req.body.jumlah;
   const total_harga = req.body.total_harga;
 
+  console.log(req.body)
+
   const sqlQuery = `INSERT INTO keranjang (id_pembeli, id_item, jumlah, ukuran, warna, total_harga) VALUES ((SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${jumlah}' , '${ukuran}', '${warna}', '${total_harga}')`;
 
   con.query(sqlQuery, (err, rows) => {
@@ -1016,13 +1033,27 @@ app.get("/keranjang/:id_pembeli/:id", (req, res) => {
 });
 
 app.delete("/keranjang/:id", (req, res) => {
-  const id_pembeli = req.body.id_pembeli;
+  // const id_pembeli = req.body.id_pembeli;
   const id = req.params.id;
-
+console.log(id)
   const sqlQuery = `DELETE FROM keranjang WHERE id_keranjang = ${id}`;
   con.query(sqlQuery, (err, rows) => {
     try {
-      return res.json();
+      res.json(rows);
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
+app.delete("/keranjang-pembeli/:id", (req, res) => {
+  // const id_pembeli = req.body.id_pembeli;
+  const id = req.params.id;
+console.log(id)
+  const sqlQuery = `DELETE FROM keranjang WHERE id_pembeli = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
     } catch (err) {
       res.json();
     }
@@ -1048,13 +1079,23 @@ app.put("/pembeli", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const alamat = req.body.alamat;
+  const no_telp = req.body.no_telp;
+  const foto_profil = req.body.foto_profil;
+  const base64Data = foto_profil?.[0]?.replace(
+    /^data:([A-Za-z-+/]+);base64,/,
+    ""
+  );
+  const buff = Buffer.from(base64Data, "base64");
 
-  const sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
+  const values = {foto_profil: buff};
 
+  const sqlQuery = `UPDATE pembeli SET email = '${email}', foto_profil = '${values}', username = '${username}', no_telp = '${no_telp}', password = '${password}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
+  console.log(req.body)
   con.query(sqlQuery, (err, rows) => {
     try {
       return res.json();
     } catch (err) {
+      console.log(error)
       res.json();
     }
   });
@@ -1203,7 +1244,20 @@ app.get("/transaksi/pembeli", (req, res) => {
 app.get("/transaksi/pembeli/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id}`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pembayaran ditolak' AND status_transaksi != 'Pesanan selesai'`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.get("/transaksi/pembeli-selesai/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi = 'Pembayaran ditolak' OR status_transaksi = 'Pesanan selesai'`;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
@@ -1303,31 +1357,3 @@ app.put("/transaksi/:id", (req, res) => {
     }
   });
 });
-
-// app.get("/konfirmasi", (req, res) => {
-//   const sqlQuery = `SELECT * FROM konfirmasi JOIN pembeli ON konfirmasi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON konfirmasi.id_mp = metode_pembayaran.id_mp`;
-//   con.query(sqlQuery, (err, rows) => {
-//     try {
-//       res.json(rows);
-//     } catch (error) {
-//       res.json({ message: error.message });
-//     }
-//   });
-// });
-
-// app.post("/konfirmasi", (req, res) => {
-//   const id_mp = req.body.id_mp;
-//   const id_item = req.body.id_item;
-//   const id_pembeli = req.body.id_pembeli;
-//   const waktu_pesan = req.body.waktu_pesan;
-
-//   const sqlQuery = `INSERT INTO konfirmasi ( id_mp, id_item, id_pembeli, waktu_pesan ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_item FROM item WHERE id_item = ${id_item}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), '${waktu_pesan}')`;
-
-//   con.query(sqlQuery, (err, rows) => {
-//     try {
-//       return res.json();
-//     } catch (err) {
-//       res.json();
-//     }
-//   });
-// });
