@@ -602,8 +602,14 @@ app.post("/penjual", (req, res) => {
   const alamat_toko = req.body.alamat;
   const whatsapp = req.body.whatsapp;
   const no_rek_penjual = req.body.no_rek_penjual;
+  const base64Data = logo_toko?.[0]?.replace(
+    /^data:([A-Za-z-+/]+);base64,/,
+    ""
+  );
+  const buff = Buffer.from(base64Data, "base64");
+  const values = {logo_toko: buff};
 
-  const sqlQuery = `INSERT INTO penjual ( level, email, nama_toko, logo_toko, password, alamat_toko, whatsapp, no_rek_penjual) VALUES ('${level}', '${email}', '${nama_toko}', '${logo_toko}', '${password}', '${alamat_toko}', '${whatsapp}', '${no_rek_penjual}')`;
+  const sqlQuery = `INSERT INTO penjual ( level, email, nama_toko, logo_toko, password, alamat_toko, whatsapp, no_rek_penjual) VALUES ('${level}', '${email}', '${nama_toko}', '${values}', '${password}', '${alamat_toko}', '${whatsapp}', '${no_rek_penjual}')`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -1086,7 +1092,6 @@ app.put("/pembeli", (req, res) => {
     ""
   );
   const buff = Buffer.from(base64Data, "base64");
-
   const values = {foto_profil: buff};
 
   const sqlQuery = `UPDATE pembeli SET email = '${email}', foto_profil = '${values}', username = '${username}', no_telp = '${no_telp}', password = '${password}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
@@ -1246,8 +1251,38 @@ app.get("/transaksi/pembeli/:id", (req, res) => {
 
   const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pembayaran ditolak' AND status_transaksi != 'Pesanan selesai'`;
   con.query(sqlQuery, (err, rows) => {
+    const idItems = [];
+
+    rows?.forEach((r) => {
+      idItems.push(r.id_item);
+    });
+    let imageQuery = `
+        SELECT
+            *
+            FROM
+        item_gambar ig 
+        WHERE ig.id_item IN (${idItems.join(",")}) 
+    `;
+
     try {
-      res.json(rows);
+      con.query(imageQuery, (err, images) => {
+        const data = rows?.map((r) => {
+          return {
+            ...r,
+            gambar: images
+              ? images
+                  ?.filter((i) => i.id_item === r.id_item)
+                  ?.map((i) => i.gambar)
+              : [],
+          };
+        });
+        try {
+          res.json(data);
+        } catch (error) {
+          console.log(error);
+          res.json({ message: error.message });
+        }
+      });
     } catch (error) {
       res.json({ message: error.message });
     }
@@ -1257,10 +1292,40 @@ app.get("/transaksi/pembeli/:id", (req, res) => {
 app.get("/transaksi/pembeli-selesai/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi = 'Pembayaran ditolak' OR status_transaksi = 'Pesanan selesai'`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi = 'Pembayaran ditolak' OR status_transaksi = 'Pesanan selesai' ORDER BY waktu_pesan ASC`;
   con.query(sqlQuery, (err, rows) => {
+    const idItems = [];
+
+    rows?.forEach((r) => {
+      idItems.push(r.id_item);
+    });
+    let imageQuery = `
+        SELECT
+            *
+            FROM
+        item_gambar ig 
+        WHERE ig.id_item IN (${idItems.join(",")}) 
+    `;
+
     try {
-      res.json(rows);
+      con.query(imageQuery, (err, images) => {
+        const data = rows?.map((r) => {
+          return {
+            ...r,
+            gambar: images
+              ? images
+                  ?.filter((i) => i.id_item === r.id_item)
+                  ?.map((i) => i.gambar)
+              : [],
+          };
+        });
+        try {
+          res.json(data);
+        } catch (error) {
+          console.log(error);
+          res.json({ message: error.message });
+        }
+      });
     } catch (error) {
       res.json({ message: error.message });
     }
