@@ -659,7 +659,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
   const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, biaya_operasional, id_penjual, id_kategori, tanggal ) VALUES ('${nama_item}', '${harga_item}', '${deskripsi_item}', '${stok_item}', '${biaya_operasional}' ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}), '${tanggal}')`;
 
   con.query(sqlQuery, (err, rows) => {
-    const riwayatQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${rows.insertId}, '${stok_item}', '${tanggal}')`;
+    const riwayatQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_toko, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${rows.insertId}, '${stok_item}', '${stok_item}', '${tanggal}')`;
     con.query(riwayatQuery, (err, rows) => {
       try {
         return res.json();
@@ -761,10 +761,12 @@ app.post("/riwayat-item-masuk", (req, res) => {
   const id_penjual = req.body.id_penjual;
   const stok_awal = req.body.stok_awal;
   const stok_tambah = req.body.stok_tambah;
+  const stok_ubah = req.body.stok_ubah;
+  const stok_toko = req.body.stok_toko;
   const tanggal = req.body.tanggal;
-  console.log(req.body);
+  console.log('riwayat-item-masuk',req.body);
 
-  const sqlQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_tambah, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${id_item}, '${stok_awal}', '${stok_tambah}', '${tanggal}')`;
+  const sqlQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_toko, stok_tambah, stok_ubah, tanggal) VALUES ('${id_penjual}', '${id_item}', '${stok_awal}', '${stok_toko}', '${stok_tambah}', '${stok_ubah}', '${tanggal}')`;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json();
@@ -814,7 +816,6 @@ app.get("/item-gambar/:id", (req, res) => {
 });
 
 app.put("/item", upload.array("foto_item", 10), (req, res) => {
-  console.log("reqbody", req);
   const id_item = req.body.id_item;
   const id_penjual = req.body.id_penjual;
   const id_kategori = req.body.id_kategori;
@@ -825,6 +826,7 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
   const warna_item = req.body.warna_item;
   const ukuran_item = req.body.ukuran_item;
   const biaya_operasional = req.body.biaya_operasional;
+  console.log('edit item',req.body)
 
   const sqlQuery = `UPDATE item SET nama_item = '${nama_item}', harga_item = ${harga_item}, deskripsi_item = '${deskripsi_item}', stok_item = ${stok_item},  biaya_operasional = ${biaya_operasional}, id_penjual = '${id_penjual}', id_kategori = ${id_kategori} WHERE item.id_item = ${id_item}`;
 
