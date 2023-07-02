@@ -465,6 +465,23 @@ app.get("/admin/:id", (req, res) => {
   });
 });
 
+app.put("/admin/:id", (req, res) => {
+  const id = req.params.id;
+  const email = req.body.email;
+  const username = req.body.username;
+  const password = req.body.password;
+  console.log(req.body)
+
+  const sqlQuery = `UPDATE admin SET email = '${email}', username = '${username}', password = '${password}' where id_admin = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
 app.get("/pembeli", (req, res) => {
   let sqlQuery = `SELECT * FROM pembeli `;
 
@@ -1213,6 +1230,20 @@ app.get("/metode_pembayaran", (req, res) => {
   });
 });
 
+app.post("/metode_pembayaran", (req, res) => {
+  const nama_mp = req.body.nama_mp;
+  const no_mp = req.body.no_mp;
+
+  const sqlQuery = `INSERT INTO metode_pembayaran (nama_mp, no_mp) VALUES ('${nama_mp}', '${no_mp}')`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json();
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
 app.get("/metode_pembayaran/:id", (req, res) => {
   const id = req.params.id;
 
@@ -1220,6 +1251,35 @@ app.get("/metode_pembayaran/:id", (req, res) => {
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows[0]);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.delete("/metode_pembayaran/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `DELETE FROM metode_pembayaran WHERE id_mp = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json();
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.put("/metode_pembayaran/:id", (req, res) => {
+  const id = req.params.id;
+  const nama_mp = req.body.nama_mp;
+  const no_mp = req.body.no_mp;
+  console.log('put mp', req.body)
+
+  const sqlQuery = `UPDATE metode_pembayaran SET nama_mp = '${nama_mp}', no_mp = '${no_mp}' WHERE id_mp = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
     } catch (error) {
       res.json({ message: error.message });
     }
