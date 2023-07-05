@@ -12,13 +12,13 @@ const { error } = require("console");
 const dir = path.join(__dirname, "public");
 const port = 3306; /*3311*/
 
-app.use(
-  cors({
-    credentials: true,
-    // origin: "http://localhost:3000",
-    origin: "*",
-  })
-);
+// app.use(
+//   cors({
+//     credentials: true,
+//     // origin: "http://localhost:3000",
+//     origin: "*",
+//   })
+// );
 app.use(express.json({ limit: "50mb" }));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
