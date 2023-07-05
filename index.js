@@ -16,7 +16,7 @@ app.use(
   cors({
     credentials: true,
     // origin: "http://localhost:3000",
-    origin: "https://main--toko-skw.netlify.app/",
+    origin: "*",
   })
 );
 app.use(express.json({ limit: "50mb" }));
