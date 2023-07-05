@@ -15,7 +15,8 @@ const port = 3306; /*3311*/
 app.use(
   cors({
     credentials: true,
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
+    origin: "https://main--toko-skw.netlify.app/",
   })
 );
 app.use(express.json({ limit: "50mb" }));
