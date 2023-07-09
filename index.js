@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const { error } = require("console");
 const dir = path.join(__dirname, "public");
-const port = 3311 /*3306;*/
+const port = 3311; /*3306;*/
 
 app.use(
   cors({
@@ -391,9 +391,38 @@ app.get("/kategori/:id", (req, res) => {
 
   const sqlQuery = `SELECT * FROM kategori JOIN item ON kategori.id_kategori = item.id_kategori WHERE kategori.id_kategori = ${id}`;
   con.query(sqlQuery, (err, rows) => {
-    console.log(rows);
+    const idItems = [];
+
+    rows?.forEach((r) => {
+      idItems.push(r.id_item);
+    });
+    let imageQuery = `
+        SELECT
+            *
+            FROM
+        item_gambar ig 
+        WHERE ig.id_item IN (${idItems.join(",")}) 
+    `;
+
     try {
-      res.json(rows);
+      con.query(imageQuery, (err, images) => {
+        const data = rows?.map((r) => {
+          return {
+            ...r,
+            gambar: images
+              ? images
+                  ?.filter((i) => i.id_item === r.id_item)
+                  ?.map((i) => i.gambar)
+              : [],
+          };
+        });
+        try {
+          res.json(data);
+        } catch (error) {
+          console.log(error);
+          res.json({ message: error.message });
+        }
+      });
     } catch (error) {
       res.json({ message: error.message });
     }
@@ -1085,9 +1114,8 @@ app.delete("/keranjang/:id", (req, res) => {
 });
 
 app.delete("/keranjang-pembeli/:id", (req, res) => {
-  // const id_pembeli = req.body.id_pembeli;
   const id = req.params.id;
-  console.log(id);
+
   const sqlQuery = `DELETE FROM keranjang WHERE id_pembeli = ${id}`;
   con.query(sqlQuery, (err, rows) => {
     try {
@@ -1480,11 +1508,11 @@ app.post("/transaksi", (req, res) => {
   const status_transaksi = req.body.status_transaksi;
   console.log(req.body);
 
-  const sqlQuery = `INSERT INTO transaksi ( id_mp, id_keranjang, id_pembeli, id_penjual,  id_item, jumlah_beli, waktu_pesan, total_harga_transaksi, status_transaksi ) VALUES ((SELECT id_mp FROM metode_pembayaran WHERE id_mp = ${id_mp}), (SELECT id_keranjang FROM keranjang WHERE id_keranjang = ${id_keranjang}), (SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_item FROM item WHERE id_item = ${id_item}), '${jumlah_beli}', '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
+  const sqlQuery = `INSERT INTO transaksi (id_mp, id_keranjang, id_penjual, id_pembeli, id_item, jumlah_beli, waktu_pesan, total_harga_transaksi, status_transaksi) VALUES (${id_mp}, ${id_keranjang}, ${id_penjual}, ${id_pembeli}, ${id_item} , '${jumlah_beli}', '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
-      return res.json();
+      res.json();
     } catch (err) {
       res.json(err);
     }
