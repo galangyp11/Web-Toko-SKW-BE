@@ -329,19 +329,6 @@ app.get("/riwayat-item-keluar", (req, res) => {
   });
 });
 
-app.delete("/item/:id", (req, res) => {
-  const id = req.params.id;
-
-  const sqlQuery = `DELETE FROM item WHERE id_item = ${id}`;
-  con.query(sqlQuery, (err, rows) => {
-    try {
-      return res.json();
-    } catch (err) {
-      res.json();
-    }
-  });
-});
-
 app.get("/item-penjual/:id", (req, res) => {
   const id = req.params.id;
 
@@ -865,6 +852,19 @@ app.get("/item-gambar/:id", (req, res) => {
       res.json(rows);
     } catch (error) {
       res.json({ message: error.message });
+    }
+  });
+});
+
+app.delete("/item/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlQuery = `DELETE FROM item WHERE id_item = ${id}`;
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
     }
   });
 });
@@ -1600,6 +1600,35 @@ app.put("/transaksi/:id", (req, res) => {
     con.query(sqlKonfirmasi, (err, rows) => {
       return res.json();
     });
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
+app.put("/transaksi-tolak/:id", (req, res) => {
+  const id = req.params.id;
+  const status_pembayaran = req.body.status_pembayaran;
+
+  const sqlQuery = `UPDATE konfirmasi SET status_pembayaran = '${status_pembayaran}' WHERE konfirmasi.id_konfirmasi = ${id}`;
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
+app.delete("/transaksi-delete/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sqlKonfirmasi = `DELETE FROM transaksi WHERE id_konfirmasi = ${id}`;
+
+  con.query(sqlKonfirmasi, (err, rows) => {
     try {
       return res.json();
     } catch (err) {
