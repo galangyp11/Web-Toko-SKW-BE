@@ -1151,7 +1151,9 @@ app.put("/pembeli", (req, res) => {
     /^data:([A-Za-z-+/]+);base64,/,
     ""
   );
+
   const buff = Buffer.from(base64Data, "base64");
+
   const values = {
     email,
     foto_profil: buff,
@@ -1161,9 +1163,30 @@ app.put("/pembeli", (req, res) => {
     alamat,
   };
 
-  const sqlQuery = `UPDATE pembeli SET ? WHERE pembeli.id_pembeli = ${id}`;
+  const sqlQuery = `UPDATE pembeli SET ? WHERE pem  beli.id_pembeli = ${id}`;
 
   con.query(sqlQuery, values, (err, rows) => {
+    console.log("err", err);
+    try {
+      return res.json();
+    } catch (err) {
+      console.log(error);
+      res.json();
+    }
+  });
+});
+
+app.put("/pembeli-nofoto", (req, res) => {
+  const id = req.body.id_pembeli;
+  const username = req.body.username;
+  const email = req.body.email;
+  const password = req.body.password;
+  const alamat = req.body.alamat;
+  const no_telp = req.body.no_telp;
+
+  const sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', no_telp = '${no_telp}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
+
+  con.query(sqlQuery, (err, rows) => {
     console.log("err", err);
     try {
       return res.json();
@@ -1397,7 +1420,7 @@ app.get("/transaksi/pembeli", (req, res) => {
 app.get("/transaksi/pembeli/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pembayaran ditolak' AND status_transaksi != 'Pesanan selesai'`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan selesai' AND status_transaksi != 'Pesanan ditolak'`;
 
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
@@ -1441,7 +1464,7 @@ app.get("/transaksi/pembeli/:id", (req, res) => {
 app.get("/transaksi/pembeli-selesai/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi = 'Pembayaran ditolak' OR status_transaksi = 'Pesanan selesai' ORDER BY waktu_pesan ASC`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan diteruskan ke penjual' AND status_transaksi != 'Pesanan sedang dikemas'`;
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
 
@@ -1484,7 +1507,7 @@ app.get("/transaksi/pembeli-selesai/:id", (req, res) => {
 app.get("/transaksi-notif/penjual/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_penjual = ${id} AND transaksi.status_transaksi = 'Pesanan diteruskan ke penjual'`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_penjual = ${id} AND status_transaksi = 'Pesanan diteruskan ke penjual'`;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
@@ -1568,6 +1591,16 @@ app.post("/transaksi", upload.array(), (req, res) => {
   con.query(sqlQuery, (err, rows) => {
     try {
       if (id_item.length > 0) {
+        const sqlTransaksi = `INSERT INTO transaksi (id_konfirmasi, id_mp, id_keranjang, id_penjual, id_pembeli, id_item, jumlah_beli, waktu_pesan, total_harga_transaksi, status_transaksi) VALUES (${rows.insertId}, ${id_mp}, ${id_keranjang}, ${id_penjual}, ${id_pembeli}, ${id_item} , '${jumlah_beli}', '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
+
+        con.query(sqlTransaksi, (err, rows) => {
+          try {
+            return res.json();
+          } catch (error) {
+            res.json(err);
+          }
+        });
+      } else if (id_item.length > 1) {
         for (let i = 0; i < id_item.length; i++) {
           const sqlTransaksi = `INSERT INTO transaksi (id_konfirmasi, id_mp, id_keranjang, id_penjual, id_pembeli, id_item, jumlah_beli, waktu_pesan, total_harga_transaksi, status_transaksi) VALUES (${rows.insertId}, ${id_mp}, ${id_keranjang[i]}, ${id_penjual[i]}, ${id_pembeli[i]}, ${id_item[i]} , '${jumlah_beli[i]}', '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
 
