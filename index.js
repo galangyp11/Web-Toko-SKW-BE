@@ -432,8 +432,6 @@ app.post("/kategori", (req, res) => {
   console.log("val", values.foto_kategori);
   con.query(sqlQuery, values, (err, rows) => {
     try {
-      console.log("err", err);
-      console.log("rows", rows);
       res.json();
     } catch (error) {
       res.json({ message: error.message });
@@ -622,16 +620,24 @@ app.post("/pembeli", (req, res) => {
   const no_rek_pembeli = req.body.no_rek_pembeli;
   const level = req.body.level;
 
-  const base64Data = foto_profil?.[0]?.replace(
-    /^data:([A-Za-z-+/]+);base64,/,
-    ""
-  );
+  const base64Data = foto_profil?.replace(/^data:([A-Za-z-+/]+);base64,/, "");
   const buff = Buffer.from(base64Data, "base64");
-  const values = { foto_profil: buff };
+  const values = {
+    level,
+    email,
+    username,
+    password,
+    alamat,
+    foto_profil,
+    no_rek_pembeli,
+    foto_profil: buff,
+  };
 
-  const sqlQuery = `INSERT INTO pembeli (level, email, username, password, alamat, foto_profil, no_rek_pembeli) VALUES ('${level}', '${email}', '${username}', '${password}', '${alamat}', '${foto_profil}', '${no_rek_pembeli}')`;
+  // const sqlQuery = `INSERT INTO pembeli (level, email, username, password, alamat, foto_profil, no_rek_pembeli) VALUES ('${level}', '${email}', '${username}', '${password}', '${alamat}', '${foto_profil}', '${no_rek_pembeli}')`;
 
-  con.query(sqlQuery, (err, rows) => {
+  const sqlQuery = `INSERT INTO pembeli SET ?`;
+
+  con.query(sqlQuery, values, (err, rows) => {
     try {
       return res.json();
     } catch (err) {
@@ -669,7 +675,7 @@ app.post("/penjual", (req, res) => {
 
 app.put("/penjual", (req, res) => {
   const id = req.body.id_penjual;
-  const email = req.body.email;
+  const email_penjual = req.body.email_penjual;
   const nama_toko = req.body.nama_toko;
   const logo_toko = req.body.logo_toko;
   const password = req.body.password;
@@ -677,12 +683,49 @@ app.put("/penjual", (req, res) => {
   const whatsapp = req.body.whatsapp;
   const no_rek_penjual = req.body.no_rek_penjual;
 
-  const sqlQuery = `UPDATE penjual SET email = '${email}', nama_toko = '${nama_toko}', logo_toko = '${logo_toko}', password = '${password}', alamat_toko = '${alamat_toko}', whatsapp = '${whatsapp}', no_rek_penjual = '${no_rek_penjual}' WHERE penjual.id_penjual = ${id}`;
+  const base64Data = logo_toko?.[0]?.replace(
+    /^data:([A-Za-z-+/]+);base64,/,
+    ""
+  );
+  const buff = Buffer.from(base64Data, "base64");
+  const values = {
+    email_penjual,
+    nama_toko,
+    password,
+    alamat_toko,
+    whatsapp,
+    no_rek_penjual,
+    logo_toko: buff,
+  };
+
+  const sqlQuery = `UPDATE penjual SET ? WHERE penjual.id_penjual = ${id}`;
+
+  con.query(sqlQuery, values, (err, rows) => {
+    try {
+      return res.json();
+    } catch (err) {
+      res.json();
+    }
+  });
+});
+
+app.put("/penjual-nofoto", (req, res) => {
+  const id = req.body.id_penjual;
+  const email_penjual = req.body.email_penjual;
+  const nama_toko = req.body.nama_toko;
+  const password = req.body.password;
+  const alamat_toko = req.body.alamat_toko;
+  const whatsapp = req.body.whatsapp;
+  const no_rek_penjual = req.body.no_rek_penjual;
+  console.log("nofoto", req.body);
+
+  const sqlQuery = `UPDATE penjual SET email_penjual = '${email_penjual}', nama_toko = '${nama_toko}', password = '${password}', alamat_toko = '${alamat_toko}', whatsapp = '${whatsapp}', no_rek_penjual = '${no_rek_penjual}' WHERE penjual.id_penjual = ${id}`;
 
   con.query(sqlQuery, (err, rows) => {
     try {
       return res.json();
     } catch (err) {
+      console.log(error);
       res.json();
     }
   });
@@ -1152,26 +1195,36 @@ app.put("/pembeli", (req, res) => {
   const password = req.body.password;
   const alamat = req.body.alamat;
   const no_telp = req.body.no_telp;
-  let sqlQuery;
+  // let sqlQuery;
 
-  if (req.body.foto_profil.length > 0) {
-    const base64Data = req.body.foto_profil?.[0]?.replace(
-      /^data:([A-Za-z-+/]+);base64,/,
-      ""
-    );
-    const buff = Buffer.from(base64Data, "base64");
-    console.log("buff", buff);
+  // if (req.body.foto_profil.length > 0) {
+  const base64Data = req.body.foto_profil?.[0]?.replace(
+    /^data:([A-Za-z-+/]+);base64,/,
+    ""
+  );
+  const buff = Buffer.from(base64Data, "base64");
+  console.log("buff", buff);
 
-    const fotoProfil = { foto_profil: buff };
+  // const fotoProfil = { foto_profil: buff };
+  const VALUES = {
+    email,
+    username,
+    password,
+    no_telp,
+    alamat,
+    foto_profil: buff,
+  };
 
-    sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', no_telp = '${no_telp}', alamat = '${alamat}', foto_profil = '${fotoProfil}' WHERE pembeli.id_pembeli = ${id}`;
+  // sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', no_telp = '${no_telp}', alamat = '${alamat}', foto_profil = '${fotoProfil}' WHERE pembeli.id_pembeli = ${id}`;
 
-    console.log("fotoPrpfil", fotoProfil);
-  } else {
-    sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', no_telp = '${no_telp}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
-  }
+  const sqlQuery = `UPDATE pembeli SET ? WHERE pembeli.id_pembeli = ${id}`;
 
-  con.query(sqlQuery, (err, rows) => {
+  // console.log("fotoPrpfil", fotoProfil);
+  // } else {
+  //   sqlQuery = `UPDATE pembeli SET email = '${email}', username = '${username}', password = '${password}', no_telp = '${no_telp}', alamat = '${alamat}' WHERE pembeli.id_pembeli = ${id}`;
+  // }
+
+  con.query(sqlQuery, VALUES, (err, rows) => {
     try {
       return res.json();
     } catch (err) {
