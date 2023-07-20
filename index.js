@@ -349,9 +349,40 @@ app.get("/item-penjual/:id", (req, res) => {
     OFFSET ${offset} 
   `;
   con.query(sqlQuery, (err, rows) => {
+    const idItems = [];
+
+    rows?.forEach((r) => {
+      idItems.push(r.id_item);
+    });
+    let imageQuery = `
+        SELECT
+            *
+            FROM
+        item_gambar ig 
+        WHERE ig.id_item IN (${idItems.join(",")}) 
+    `;
+
     try {
-      res.json(rows);
+      con.query(imageQuery, (err, images) => {
+        const data = rows?.map((r) => {
+          return {
+            ...r,
+            gambar: images
+              ? images
+                  ?.filter((i) => i.id_item === r.id_item)
+                  ?.map((i) => i.gambar)
+              : [],
+          };
+        });
+        try {
+          res.json(data);
+        } catch (error) {
+          console.log(error);
+          res.json({ message: error.message });
+        }
+      });
     } catch (error) {
+      console.log(error);
       res.json({ message: error.message });
     }
   });
@@ -648,7 +679,7 @@ app.post("/pembeli", (req, res) => {
 
 app.post("/penjual", (req, res) => {
   const level = req.body.level;
-  const email = req.body.email;
+  const email_penjual = req.body.email_penjual;
   const nama_toko = req.body.nama_toko;
   const logo_toko = req.body.logo_toko;
   const password = req.body.password;
@@ -660,11 +691,20 @@ app.post("/penjual", (req, res) => {
     ""
   );
   const buff = Buffer.from(base64Data, "base64");
-  const values = { logo_toko: buff };
+  const values = {
+    level,
+    email_penjual,
+    nama_toko,
+    password,
+    alamat_toko,
+    whatsapp,
+    no_rek_penjual,
+    logo_toko: buff,
+  };
 
-  const sqlQuery = `INSERT INTO penjual ( level, email, nama_toko, logo_toko, password, alamat_toko, whatsapp, no_rek_penjual) VALUES ('${level}', '${email}', '${nama_toko}', '${values}', '${password}', '${alamat_toko}', '${whatsapp}', '${no_rek_penjual}')`;
+  const sqlQuery = `INSERT INTO penjual SET ?`;
 
-  con.query(sqlQuery, (err, rows) => {
+  con.query(sqlQuery, values, (err, rows) => {
     try {
       return res.json();
     } catch (err) {
@@ -1478,7 +1518,7 @@ app.get("/transaksi/pembeli", (req, res) => {
 app.get("/transaksi/pembeli/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan selesai' AND status_transaksi != 'Pesanan ditolak'`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan selesai' AND status_transaksi != 'Pesanan ditolak' ORDER BY waktu_pesan ASC`;
 
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
@@ -1522,7 +1562,7 @@ app.get("/transaksi/pembeli/:id", (req, res) => {
 app.get("/transaksi/pembeli-selesai/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan diteruskan ke penjual' AND status_transaksi != 'Pesanan sedang dikemas'`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan diteruskan ke penjual' AND status_transaksi != 'Pesanan sedang dikemas' ORDER BY waktu_pesan ASC`;
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
 
