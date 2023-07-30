@@ -536,9 +536,10 @@ app.put("/admin/:id", (req, res) => {
 
 app.get("/pembeli", (req, res) => {
   let sqlQuery = `SELECT * FROM pembeli `;
+  console.log(req.query);
 
   if (req.query.search) {
-    sqlQuery += `WHERE username LIKE '%${req.query.search}%' OR email LIKE '%${req.query.search}$'`;
+    sqlQuery += `WHERE email LIKE '%${req.query.search}%' OR username LIKE '%${req.query.search}%'`;
   }
 
   let offset = DEFAULT_OFFSET;
@@ -555,8 +556,37 @@ app.get("/pembeli", (req, res) => {
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json(rows);
+      console.log(rows);
     } catch (error) {
       // console.log(error);
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.get("/pembeli-email", (req, res) => {
+  let sqlQuery = `SELECT * FROM pembeli WHERE email LIKE '%${req.query.search}%'`;
+  console.log(req.query);
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+      console.log(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.get("/pembeli-username", (req, res) => {
+  let sqlQuery = `SELECT * FROM pembeli WHERE username LIKE '%${req.query.search}%'`;
+  console.log(req.query);
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+      console.log(rows);
+    } catch (error) {
       res.json({ message: error.message });
     }
   });
@@ -592,7 +622,7 @@ app.get("/penjual", (req, res) => {
   let sqlQuery = `SELECT * FROM penjual `;
 
   if (req.query.search) {
-    sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%' OR email_penjual LIKE '%${req.query.search}$'`;
+    sqlQuery += `WHERE nama_toko LIKE '%${req.query.search}%' OR email_penjual LIKE '%${req.query.search}$%'`;
   }
 
   let offset = DEFAULT_OFFSET;
@@ -896,7 +926,19 @@ app.post("/riwayat-item-masuk", (req, res) => {
   const tanggal = req.body.tanggal;
   console.log("riwayat-item-masuk", req.body);
 
-  const sqlQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_toko, stok_tambah, stok_ubah, tanggal) VALUES ('${id_penjual}', '${id_item}', '${stok_awal}', '${stok_toko}', '${stok_tambah}', '${stok_ubah}', '${tanggal}')`;
+  const values = [
+    id_item,
+    id_penjual,
+    stok_awal,
+    stok_tambah,
+    stok_toko,
+    tanggal,
+  ];
+
+  const sqlQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_toko, stok_tambah, stok_ubah, tanggal) VALUES (${id_penjual}, ${id_item}, '${stok_awal}', '${stok_toko}', '${stok_tambah}', '${stok_ubah}', '${tanggal}')`;
+
+  // const riwayatQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_toko, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${id_item}, '${stok_item}', '${stok_item}', '${tanggal}')`;
+  // const sqlQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_toko, stok_tambah, stok_ubah, tanggal) VALUES (?)`;
   con.query(sqlQuery, (err, rows) => {
     try {
       res.json();
@@ -969,6 +1011,8 @@ app.put("/item", upload.array("foto_item", 10), (req, res) => {
   const warna_item = req.body.warna_item;
   const ukuran_item = req.body.ukuran_item;
   const biaya_operasional = req.body.biaya_operasional;
+
+  console.log("put item", req.body);
 
   const sqlQuery = `UPDATE item SET nama_item = '${nama_item}', harga_item = ${harga_item}, deskripsi_item = '${deskripsi_item}', stok_item = ${stok_item},  biaya_operasional = ${biaya_operasional}, id_penjual = '${id_penjual}', id_kategori = ${id_kategori} WHERE item.id_item = ${id_item}`;
 
