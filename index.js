@@ -1562,7 +1562,7 @@ app.get("/transaksi/pembeli", (req, res) => {
 app.get("/transaksi/pembeli/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan selesai' AND status_transaksi != 'Pesanan ditolak' ORDER BY waktu_pesan ASC`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan selesai' AND status_transaksi != 'Pesanan ditolak' AND status_transaksi != 'Menunggu Konfirmasi' ORDER BY waktu_pesan ASC`;
 
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
@@ -1606,7 +1606,7 @@ app.get("/transaksi/pembeli/:id", (req, res) => {
 app.get("/transaksi/pembeli-selesai/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan diteruskan ke penjual' AND status_transaksi != 'Pesanan sedang dikemas' ORDER BY waktu_pesan ASC`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan diteruskan ke penjual' AND status_transaksi != 'Pesanan sedang dikemas' AND status_transaksi != 'Menunggu Konfirmasi' ORDER BY waktu_pesan ASC`;
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
 
