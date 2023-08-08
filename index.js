@@ -659,6 +659,62 @@ app.get("/penjual/:id", (req, res) => {
   });
 });
 
+app.get("/penjual-email", (req, res) => {
+  let sqlQuery = `SELECT * FROM penjual WHERE email_penjual LIKE '%${req.query.search}%'`;
+  console.log(req.query);
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+      console.log(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.get("/penjual-toko", (req, res) => {
+  let sqlQuery = `SELECT * FROM penjual WHERE nama_toko LIKE '%${req.query.search}%'`;
+  console.log(req.query);
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+      console.log(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.get("/penjual-no-wa", (req, res) => {
+  let sqlQuery = `SELECT * FROM penjual WHERE whatsapp LIKE '%${req.query.search}%'`;
+  console.log(req.query);
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+      console.log(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
+app.get("/penjual-no-rek", (req, res) => {
+  let sqlQuery = `SELECT * FROM penjual WHERE no_rek_penjual LIKE '%${req.query.search}%'`;
+  console.log(req.query);
+
+  con.query(sqlQuery, (err, rows) => {
+    try {
+      res.json(rows);
+      console.log(rows);
+    } catch (error) {
+      res.json({ message: error.message });
+    }
+  });
+});
+
 app.delete("/penjual/:id", (req, res) => {
   const id = req.params.id;
 
@@ -819,6 +875,7 @@ app.post("/item", upload.array("foto_item", 10), (req, res) => {
   const sqlQuery = `INSERT INTO item (nama_item, harga_item, deskripsi_item, stok_item, biaya_operasional, id_penjual, id_kategori, tanggal ) VALUES ('${nama_item}', '${harga_item}', '${deskripsi_item}', '${stok_item}', '${biaya_operasional}' ,(SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), (SELECT id_kategori FROM kategori WHERE id_kategori = ${id_kategori}), '${tanggal}')`;
 
   con.query(sqlQuery, (err, rows) => {
+    console.log(rows);
     const riwayatQuery = `INSERT INTO riwayat_item_masuk (id_penjual, id_item, stok_awal, stok_toko, tanggal) VALUES ((SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${rows.insertId}, '${stok_item}', '${stok_item}', '${tanggal}')`;
     con.query(riwayatQuery, (err, rows) => {
       try {
@@ -1606,7 +1663,7 @@ app.get("/transaksi/pembeli/:id", (req, res) => {
 app.get("/transaksi/pembeli-selesai/:id", (req, res) => {
   const id = req.params.id;
 
-  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan diteruskan ke penjual' AND status_transaksi != 'Pesanan sedang dikemas' AND status_transaksi != 'Menunggu Konfirmasi' ORDER BY waktu_pesan ASC`;
+  const sqlQuery = `SELECT * FROM transaksi JOIN item ON transaksi.id_item = item.id_item JOIN pembeli ON transaksi.id_pembeli = pembeli.id_pembeli JOIN metode_pembayaran ON transaksi.id_mp = metode_pembayaran.id_mp JOIN penjual ON transaksi.id_penjual = penjual.id_penjual WHERE transaksi.id_pembeli = ${id} AND status_transaksi != 'Pesanan diteruskan ke penjual' AND status_transaksi != 'Pesanan sedang dikemas' AND status_transaksi != 'Pesanan sedang dikirim' AND status_transaksi != 'Menunggu Konfirmasi' ORDER BY waktu_pesan ASC`;
   con.query(sqlQuery, (err, rows) => {
     const idItems = [];
 
