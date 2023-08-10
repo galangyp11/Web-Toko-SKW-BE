@@ -1781,15 +1781,13 @@ app.post("/transaksi", upload.array(), (req, res) => {
   const waktu_pesan = req.body.waktu_pesan;
   const total_harga_transaksi = req.body.total_harga_transaksi;
   const status_transaksi = req.body.status_transaksi;
-  console.log(req.body);
+  console.log("transaksi", req.body);
 
-  const idPembeli = parseInt(id_pembeli[0]);
-  console.log(idPembeli);
-
-  const sqlQuery = `INSERT INTO konfirmasi (id_pembeli, id_mp, waktu_pesan, total_harga_transaksi, status_pembayaran) VALUES (${idPembeli}, ${id_mp}, '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
+  const sqlQuery = `INSERT INTO konfirmasi (id_pembeli, id_mp, waktu_pesan, total_harga_transaksi, status_pembayaran) VALUES (${id_pembeli}, ${id_mp}, '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
   con.query(sqlQuery, (err, rows) => {
+    console.log("rows transaksi", rows);
     try {
-      if (id_item.length > 0) {
+      if (Array.isArray(id_item) === false) {
         const sqlTransaksi = `INSERT INTO transaksi (id_konfirmasi, id_mp, id_keranjang, id_penjual, id_pembeli, id_item, jumlah_beli, waktu_pesan, total_harga_transaksi, status_transaksi) VALUES (${rows.insertId}, ${id_mp}, ${id_keranjang}, ${id_penjual}, ${id_pembeli}, ${id_item} , '${jumlah_beli}', '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
 
         con.query(sqlTransaksi, (err, rows) => {
@@ -1799,9 +1797,9 @@ app.post("/transaksi", upload.array(), (req, res) => {
             res.json(err);
           }
         });
-      } else if (id_item.length > 1) {
+      } else if (id_item?.length > 1) {
         for (let i = 0; i < id_item.length; i++) {
-          const sqlTransaksi = `INSERT INTO transaksi (id_konfirmasi, id_mp, id_keranjang, id_penjual, id_pembeli, id_item, jumlah_beli, waktu_pesan, total_harga_transaksi, status_transaksi) VALUES (${rows.insertId}, ${id_mp}, ${id_keranjang[i]}, ${id_penjual[i]}, ${id_pembeli[i]}, ${id_item[i]} , '${jumlah_beli[i]}', '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
+          const sqlTransaksi = `INSERT INTO transaksi (id_konfirmasi, id_mp, id_keranjang, id_penjual, id_pembeli, id_item, jumlah_beli, waktu_pesan, total_harga_transaksi, status_transaksi) VALUES (${rows.insertId}, ${id_mp}, ${id_keranjang[i]}, ${id_penjual[i]}, ${id_pembeli}, ${id_item[i]} , '${jumlah_beli[i]}', '${waktu_pesan}', '${total_harga_transaksi}', '${status_transaksi}')`;
 
           con.query(sqlTransaksi, (err, rows) => {
             try {
