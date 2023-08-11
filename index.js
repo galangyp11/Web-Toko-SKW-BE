@@ -152,6 +152,63 @@ app.get("/item", (req, res) => {
   });
 });
 
+app.get("/item-homepage", (req, res) => {
+  let sqlQuery = `
+    SELECT
+      *,
+      i.id_item
+    FROM
+      item i
+    JOIN kategori ON
+      i.id_kategori = kategori.id_kategori
+    JOIN penjual ON
+      i.id_penjual = penjual.id_penjual
+  `;
+
+  if (req.query.search) {
+    sqlQuery += ` WHERE i.nama_item LIKE '%${req.query.search}%' OR kategori.nama_kategori LIKE '%${req.query.search}%'`;
+  }
+
+  con.query(sqlQuery, (err, rows) => {
+    const idItems = [];
+
+    rows?.forEach((r) => {
+      idItems.push(r.id_item);
+    });
+    let imageQuery = `
+        SELECT
+            *
+            FROM
+        item_gambar ig 
+        WHERE ig.id_item IN (${idItems.join(",")}) 
+    `;
+
+    try {
+      con.query(imageQuery, (err, images) => {
+        const data = rows?.map((r) => {
+          return {
+            ...r,
+            gambar: images
+              ? images
+                  ?.filter((i) => i.id_item === r.id_item)
+                  ?.map((i) => i.gambar)
+              : [],
+          };
+        });
+        try {
+          res.json(data);
+        } catch (error) {
+          console.log(error);
+          res.json({ message: error.message });
+        }
+      });
+    } catch (error) {
+      console.log(error);
+      res.json({ message: error.message });
+    }
+  });
+});
+
 app.get("/total-item", (req, res) => {
   let sqlQuery = `SELECT * FROM item`;
 
