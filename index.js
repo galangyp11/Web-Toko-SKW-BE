@@ -336,7 +336,8 @@ app.post("/riwayat-item-keluar", (req, res) => {
 
   console.log("item kelaur", req.body);
 
-  const sqlQuery = `INSERT INTO riwayat_item_keluar (id_pembeli, id_penjual, id_item, id_transaksi, jumlah_beli, tanggal) VALUES ((SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${id_item}, (SELECT id_transaksi FROM transaksi WHERE id_transaksi = ${id_transaksi}),'${jumlah_beli}', '${tanggal}')`;
+  const sqlQuery = `INSERT INTO riwayat_item_keluar (id_pembeli, id_penjual, id_item, id_transaksi, jumlah_beli, tanggal) VALUES ((SELECT id_pembeli FROM pembeli WHERE id_pembeli = ${id_pembeli}), (SELECT id_penjual FROM penjual WHERE id_penjual = ${id_penjual}), ${id_item}, (SELECT id_transaksi FROM transaksi WHERE id_transaksi = ${id_transaksi}), '${jumlah_beli}', '${tanggal}')`;
+
   con.query(sqlQuery, (err, rows) => {
     try {
       return res.json();
