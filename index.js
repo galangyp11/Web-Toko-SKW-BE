@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const { error } = require("console");
 const dir = path.join(__dirname, "public");
-const port = 3311; /*3306;*/
+const port = /*3311*/ 3306;
 
 app.use(
   cors({
@@ -27,19 +27,19 @@ app.listen(process.env.PORT || port, () => {
   console.log(`runnig on port ${port}`);
 });
 
-let con = mysql.createConnection({
-  host: "Localhost",
-  user: "root",
-  password: process.env.DB_PASSWORD,
-  database: "skw",
-});
-
 // let con = mysql.createConnection({
-//   host: "sql6.freesqldatabase.com",
-//   user: "sql6630617",
-//   password: "B1eqdmWptN",
-//   database: "sql6630617",
+//   host: "Localhost",
+//   user: "root",
+//   password: process.env.DB_PASSWORD,
+//   database: "skw",
 // });
+
+let con = mysql.createConnection({
+  host: "sql12.freesqldatabase.com",
+  user: "sql12650716",
+  password: "TrhgMkEjGH",
+  database: "sql12650716",
+});
 
 app.use(
   session({
